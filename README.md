@@ -21,6 +21,44 @@ int main() {
 }
 ```
 
+## Examples
+Here are some examples of what you can do with RIFT:
+```cpp
+#include <iostream>
+#include <rift.hpp>
+
+int main() {
+    // Basic string interpolation
+    std::cout << rift::format("Hello {name}!", {
+        {"name", rift::Value::from("World")}
+    }) << std::endl; // Prints "Hello World!"
+    
+    // Basic arithmetic
+    std::cout << rift::format("2 + 2 * 2 = {2 + 2 * 2}!") << std::endl;
+    // Prints "2 + 2 * 2 = 6!"
+    
+    // Arithmetic with variables
+    std::cout << rift::format("2 + 2 * {number} = {2 + 2 * number}!", {
+        {"number", rift::Value::from(3)}
+    }) << std::endl; // Prints "2 + 2 * 3 = 8!"
+    
+    // Logical expressions
+    std::cout << rift::format("Is 2 + 2 equal to 4? {2 + 2 == 4}!") << std::endl;
+    // Prints "Is 2 + 2 equal to 4? true!"
+    
+    // Ternary operator
+    std::cout << rift::format("Is 2 + 2 equal to 4? {2 + 2 == 4 ? 'Yes' : 'No'}!") << std::endl;
+    // Prints "Is 2 + 2 equal to 4? Yes!"
+    
+    // Error handling is built-in
+    std::cout << rift::format("This is an invalid expression: {2 + 2!") << std::endl;
+    // Prints "<error>" - general case for errors
+    std::cout << rift::format("Dividing strings: {'hi' / 3}") << std::endl;
+    // Prints "Dividing strings: <error: division of strings>" - specific error message
+}
+
+```
+
 ## How does it work?
 Under the hood, RIFT uses a simple lexer and parser to tokenize and parse the input string.
 Each `{ ... }` block is parsed as an expression, which is then evaluated at runtime. The result
