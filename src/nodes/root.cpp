@@ -7,4 +7,8 @@ namespace rift {
         visitor->visit(this);
     }
 
+    Value RootNode::getValue(Visitor* visitor) const {
+        return Value::string("<root>");
+    }
+
 }

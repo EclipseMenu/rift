@@ -10,7 +10,7 @@ namespace rift {
         Segment, // Static text segment
 
         // Variables
-        IDENTIFIER, NUMBER, STRING,
+        IDENTIFIER, FLOAT, INTEGER, STRING,
 
         // Brackets
         LEFT_BRACE, RIGHT_BRACE,
@@ -33,7 +33,7 @@ namespace rift {
 
     inline const char* const TOKEN_NAMES[] = {
         "Segment",
-        "Identifier", "Number", "String",
+        "Identifier", "Float", "Integer", "String",
         "Left Brace", "Right Brace",
         "Left Paren", "Right Paren",
         "Plus", "Minus", "Star", "Slash", "Percent", "Caret",

@@ -194,8 +194,12 @@ namespace rift {
     }
 
     Node* Parser::parseAtom() {
-        if (m_currentToken.type == TokenType::NUMBER) {
+        if (m_currentToken.type == TokenType::FLOAT) {
             auto *value = new ValueNode(Value::from(std::stof(m_currentToken.value)));
+            advance();
+            return value;
+        } else if (m_currentToken.type == TokenType::INTEGER) {
+            auto *value = new ValueNode(Value::from(std::stoi(m_currentToken.value)));
             advance();
             return value;
         } else if (m_currentToken.type == TokenType::STRING) {

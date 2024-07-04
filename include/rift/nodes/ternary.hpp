@@ -42,6 +42,9 @@ namespace rift {
         /// @copydoc Node::accept
         void accept(Visitor* visitor) override;
 
+        /// @copydoc Node::getValue
+        [[nodiscard]] Value getValue(Visitor* visitor) const override;
+
         std::ostream& print(std::ostream& out) const override {
             return out << "TernaryNode(" << *m_condition << ", " << *m_trueBranch << ", " << *m_falseBranch << ')';
         }

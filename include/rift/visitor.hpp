@@ -12,6 +12,14 @@ namespace rift {
     public:
         explicit Visitor(Script* script) : m_script(script) {}
 
+        /// @brief Destruct the visitor.
+        virtual ~Visitor() = default;
+
+        /// @brief Get a variable from the script.
+        /// @param name The name of the variable.
+        /// @return The value of the variable.
+        [[nodiscard]] Value getVariable(const std::string& name) const;
+
         /// @brief Visit a node.
         void visit(Node* node);
 

@@ -29,12 +29,11 @@ namespace rift {
         auto* s = new Script();
         auto* root = parser.parse();
         if (!root) {
-            std::cout << "Error: " << parser.getError() << std::endl;
+            //std::cout << "Error: " << parser.getError() << std::endl;
             delete s;
             return nullptr;
         }
 
-        std::cout << "AST: " << *root << std::endl << std::endl;
         s->m_nodes.push_back(root);
 
         return s;

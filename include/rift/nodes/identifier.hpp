@@ -24,6 +24,9 @@ namespace rift {
         /// @copydoc Node::accept
         void accept(Visitor* visitor) override;
 
+        /// @copydoc Node::getValue
+        [[nodiscard]] Value getValue(Visitor* visitor) const override;
+
         /// @copydoc Node::print
         std::ostream& print(std::ostream& out) const override {
             return out << "IdentifierNode(" << m_name << ')';

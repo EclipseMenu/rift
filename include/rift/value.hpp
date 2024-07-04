@@ -12,7 +12,7 @@ namespace rift {
             String,
             Integer,
             Float,
-            Boolean
+            Boolean,
         };
 
         static Value string(std::string value) {
@@ -49,7 +49,8 @@ namespace rift {
                     std::is_same_v<T, std::string_view> ||
                     std::is_same_v<T, std::string> ||
                     std::is_same_v<T, char*> ||
-                    std::is_same_v<T, const char*>) {
+                    std::is_same_v<T, const char*> ||
+                    std::is_same_v<T, char[]>) {
                 return string(value);
             } else if constexpr (std::is_same_v<T, int>) {
                 return integer(value);
@@ -83,6 +84,92 @@ namespace rift {
         /// @brief Get the boolean value.
         /// @return The boolean value.
         [[nodiscard]] bool getBoolean() const { return m_boolean; }
+
+        /// @brief Convert the value to a string.
+        /// @return The string representation of the value.
+        [[nodiscard]] std::string toString() const;
+
+        /// @brief Convert the value to a float.
+        /// @return The float representation of the value.
+        [[nodiscard]] float toFloat() const;
+
+        /// @brief Adds two values together.
+        /// @param other The other value to add.
+        /// @return The result of the addition.
+        [[nodiscard]] Value operator+(const Value& other) const;
+
+        /// @brief Subtracts two values.
+        /// @param other The other value to subtract.
+        /// @return The result of the subtraction.
+        [[nodiscard]] Value operator-(const Value& other) const;
+
+        /// @brief Multiplies two values.
+        /// @param other The other value to multiply.
+        /// @return The result of the multiplication.
+        [[nodiscard]] Value operator*(const Value& other) const;
+
+        /// @brief Divides two values.
+        /// @param other The other value to divide.
+        /// @return The result of the division.
+        [[nodiscard]] Value operator/(const Value& other) const;
+
+        /// @brief Modulus two values.
+        /// @param other The other value to modulus.
+        /// @return The result of the modulus.
+        [[nodiscard]] Value operator%(const Value& other) const;
+
+        /// @brief Exponentiate two values.
+        /// @param other The other value to exponentiate.
+        /// @return The result of the exponentiation.
+        [[nodiscard]] Value operator^(const Value& other) const;
+
+        /// @brief Compare two values for equality.
+        /// @param other The other value to compare.
+        /// @return The result of the comparison.
+        [[nodiscard]] Value operator==(const Value& other) const;
+
+        /// @brief Compare two values for inequality.
+        /// @param other The other value to compare.
+        /// @return The result of the comparison.
+        [[nodiscard]] Value operator!=(const Value& other) const;
+
+        /// @brief Compare two values for less than.
+        /// @param other The other value to compare.
+        /// @return The result of the comparison.
+        [[nodiscard]] Value operator<(const Value& other) const;
+
+        /// @brief Compare two values for greater than.
+        /// @param other The other value to compare.
+        /// @return The result of the comparison.
+        [[nodiscard]] Value operator>(const Value& other) const;
+
+        /// @brief Compare two values for less than or equal to.
+        /// @param other The other value to compare.
+        /// @return The result of the comparison.
+        [[nodiscard]] Value operator<=(const Value& other) const;
+
+        /// @brief Compare two values for greater than or equal to.
+        /// @param other The other value to compare.
+        /// @return The result of the comparison.
+        [[nodiscard]] Value operator>=(const Value& other) const;
+
+        /// @brief Negate a value.
+        /// @return The negated value.
+        [[nodiscard]] Value operator-() const;
+
+        /// @brief Logical AND two values.
+        /// @param other The other value to AND.
+        /// @return The result of the AND operation.
+        [[nodiscard]] Value operator&&(const Value& other) const;
+
+        /// @brief Logical OR two values.
+        /// @param other The other value to OR.
+        /// @return The result of the OR operation.
+        [[nodiscard]] Value operator||(const Value& other) const;
+
+        /// @brief Logical NOT a value.
+        /// @return The result of the NOT operation.
+        [[nodiscard]] Value operator!() const;
 
     private:
         Type m_type = Type::String;

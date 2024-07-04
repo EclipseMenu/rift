@@ -38,6 +38,9 @@ namespace rift {
         /// @copydoc Node::accept
         void accept(Visitor* visitor) override;
 
+        /// @copydoc Node::getValue
+        [[nodiscard]] Value getValue(Visitor* visitor) const override;
+
         /// @copydoc Node::print
         std::ostream& print(std::ostream& out) const override {
             out << "BinaryOpNode(" << *m_lhs << ", " << *m_rhs << ", " << tokenTypeToString(m_op) << ")";

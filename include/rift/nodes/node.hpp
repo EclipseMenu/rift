@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include "../value.hpp"
 
 namespace rift {
 
@@ -29,6 +30,11 @@ namespace rift {
         /// @brief Accept a visitor.
         /// @param visitor The visitor.
         virtual void accept(class Visitor* visitor) = 0;
+
+        /// @brief Get the value of the node.
+        /// @param visitor The visitor. Used if the node needs to get variables.
+        /// @return The value of the node.
+        [[nodiscard]] virtual Value getValue(Visitor* visitor) const = 0;
 
         /// @brief Print the node to an output stream. (For debugging)
         virtual std::ostream& print(std::ostream& out) const = 0;

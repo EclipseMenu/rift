@@ -15,18 +15,13 @@ namespace rift {
         m_output << text;
     }
 
-    std::string getValueString(const Value& value) {
-        if (value.getType() == Value::Type::String) {
-            return value.getString();
-        } else if (value.getType() == Value::Type::Integer) {
-            return std::to_string(value.getInteger());
-        } else if (value.getType() == Value::Type::Float) {
-            return std::to_string(value.getFloat());
-        } else if (value.getType() == Value::Type::Boolean) {
-            return value.getBoolean() ? "true" : "false";
+    Value Visitor::getVariable(const std::string& name) const {
+        auto it = m_script->m_variables.find(name);
+        if (it != m_script->m_variables.end()) {
+            return it->second;
+        } else {
+            return Value::string("null");
         }
-
-        return "null";
     }
 
     std::string Visitor::getOutput() const {
@@ -50,31 +45,33 @@ namespace rift {
     void Visitor::visit(IdentifierNode* node) {
         auto it = m_script->m_variables.find(node->getName());
         if (it != m_script->m_variables.end()) {
-            auto type = it->second.getType();
-            write(getValueString(it->second));
+            write(it->second.toString());
         } else {
             write("null");
         }
     }
 
     void Visitor::visit(ValueNode* node) {
-        write(getValueString(node->getValue()));
+        write(node->getValue().toString());
     }
 
     void Visitor::visit(UnaryOpNode* node) {
-        node->print(m_output);
+        auto value = node->getValue(this);
+        write(value.toString());
     }
 
     void Visitor::visit(BinaryOpNode* node) {
-        node->print(m_output);
+        auto value = node->getValue(this);
+        write(value.toString());
     }
 
     void Visitor::visit(FunctionCallNode* node) {
-        // node->print(m_output);
+        write("<Function call not implemented>");
     }
 
     void Visitor::visit(TernaryNode* node) {
-        node->print(m_output);
+        auto value = node->getValue(this);
+        write(value.toString());
     }
 
     std::string Visitor::evaluate() {

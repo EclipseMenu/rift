@@ -28,6 +28,9 @@ namespace rift {
         /// @copydoc Node::accept
         void accept(Visitor* visitor) override;
 
+        /// @copydoc Node::getValue
+        [[nodiscard]] Value getValue(Visitor* visitor) const override;
+
         /// @brief Add a child to the root node.
         /// @param child The child to add.
         void addChild(Node* child) { m_children.push_back(child); }

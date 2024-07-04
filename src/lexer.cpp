@@ -174,12 +174,18 @@ namespace rift {
         while (isDigit(peek())) advance();
 
         // Parse the fractional part.
+        bool hasDot = false;
         if (peek() == '.' && isDigit(peekNext())) {
+            hasDot = true;
             advance(); // Consume the dot.
             while (isDigit(peek())) advance();
         }
 
-        return Token{TokenType::NUMBER, m_script.substr(start, m_index - start)};
+        if (hasDot) {
+            return Token{TokenType::FLOAT, m_script.substr(start, m_index - start)};
+        }
+
+        return Token{TokenType::INTEGER, m_script.substr(start, m_index - start)};
     }
 
     Token Lexer::parseString() {

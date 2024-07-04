@@ -7,4 +7,8 @@ namespace rift {
         visitor->visit(this);
     }
 
+    Value SegmentNode::getValue(Visitor* visitor) const {
+        return Value::string("<segment>");
+    }
+
 }
