@@ -1,12 +1,32 @@
 #include <rift/visitor.hpp>
 
-#include <rift/nodes/segment.hpp>
+#include <rift/nodes/binaryop.hpp>
+// #include <rift/nodes/functioncall.hpp>
 #include <rift/nodes/identifier.hpp>
+#include <rift/nodes/root.hpp>
+#include <rift/nodes/segment.hpp>
+#include <rift/nodes/ternary.hpp>
+#include <rift/nodes/unaryop.hpp>
+#include <rift/nodes/value.hpp>
 
 namespace rift {
 
     void Visitor::write(const std::string& text) {
         m_output << text;
+    }
+
+    std::string getValueString(const Value& value) {
+        if (value.getType() == Value::Type::String) {
+            return value.getString();
+        } else if (value.getType() == Value::Type::Integer) {
+            return std::to_string(value.getInteger());
+        } else if (value.getType() == Value::Type::Float) {
+            return std::to_string(value.getFloat());
+        } else if (value.getType() == Value::Type::Boolean) {
+            return value.getBoolean() ? "true" : "false";
+        }
+
+        return "null";
     }
 
     std::string Visitor::getOutput() const {
@@ -17,6 +37,12 @@ namespace rift {
         node->accept(this);
     }
 
+    void Visitor::visit(RootNode* node) {
+        for (auto& child : node->getChildren()) {
+            child->accept(this);
+        }
+    }
+
     void Visitor::visit(SegmentNode* node) {
         write(node->getText());
     }
@@ -25,20 +51,30 @@ namespace rift {
         auto it = m_script->m_variables.find(node->getName());
         if (it != m_script->m_variables.end()) {
             auto type = it->second.getType();
-            if (type == Value::Type::String) {
-                write(it->second.getString());
-            } else if (type == Value::Type::Integer) {
-                write(std::to_string(it->second.getInteger()));
-            } else if (type == Value::Type::Float) {
-                write(std::to_string(it->second.getFloat()));
-            } else if (type == Value::Type::Boolean) {
-                write(it->second.getBoolean() ? "true" : "false");
-            }
-
-            return;
+            write(getValueString(it->second));
+        } else {
+            write("null");
         }
+    }
 
-        write("null");
+    void Visitor::visit(ValueNode* node) {
+        write(getValueString(node->getValue()));
+    }
+
+    void Visitor::visit(UnaryOpNode* node) {
+        node->print(m_output);
+    }
+
+    void Visitor::visit(BinaryOpNode* node) {
+        node->print(m_output);
+    }
+
+    void Visitor::visit(FunctionCallNode* node) {
+        // node->print(m_output);
+    }
+
+    void Visitor::visit(TernaryNode* node) {
+        node->print(m_output);
     }
 
     std::string Visitor::evaluate() {

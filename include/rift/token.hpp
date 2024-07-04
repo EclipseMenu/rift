@@ -2,6 +2,7 @@
 
 #include <string>
 #include <utility>
+#include <memory>
 
 namespace rift {
 
@@ -16,7 +17,7 @@ namespace rift {
         LEFT_PAREN, RIGHT_PAREN,
 
         // Operators
-        PLUS, MINUS, STAR, SLASH, PERCENT,
+        PLUS, MINUS, STAR, SLASH, PERCENT, CARET,
         QUESTION, COLON,
         LESS, GREATER, LESS_EQUAL, GREATER_EQUAL, EQUAL_EQUAL, NOT_EQUAL,
 
@@ -30,11 +31,28 @@ namespace rift {
         END, ERROR
     };
 
+    inline const char* const TOKEN_NAMES[] = {
+        "Segment",
+        "Identifier", "Number", "String",
+        "Left Brace", "Right Brace",
+        "Left Paren", "Right Paren",
+        "Plus", "Minus", "Star", "Slash", "Percent", "Caret",
+        "Question", "Colon",
+        "Less", "Greater", "Less Equal", "Greater Equal", "Equal Equal", "Not Equal",
+        "And", "Or", "Not",
+        "Dot", "Comma",
+        "End", "Error"
+    };
+
+    inline const char* tokenTypeToString(TokenType type) {
+        return TOKEN_NAMES[static_cast<int>(type)];
+    }
+
     struct Token {
         TokenType type;
         std::string value;
 
-        Token(TokenType type, std::string  value) : type(type), value(std::move(value)) {}
+        Token(TokenType type, std::string value) : type(type), value(std::move(value)) {}
     };
 
 }

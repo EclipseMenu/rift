@@ -15,10 +15,10 @@ namespace rift {
         /// @return The next token.
         Token nextToken();
 
-    private:
         /// @brief Check whether index is at the end of the script.
         [[nodiscard]] bool isEnd() const;
 
+    private:
         /// @brief Get the current character.
         [[nodiscard]] char peek() const;
 

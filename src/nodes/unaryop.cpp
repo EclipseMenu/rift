@@ -1,9 +1,9 @@
-#include <rift/nodes/segment.hpp>
+#include <rift/nodes/unaryop.hpp>
 #include <rift/visitor.hpp>
 
 namespace rift {
 
-    void SegmentNode::accept(Visitor* visitor) {
+    void UnaryOpNode::accept(Visitor* visitor) {
         visitor->visit(this);
     }
 

@@ -8,6 +8,9 @@ namespace rift {
 
     class Script {
     public:
+        /// @brief Destructor.
+        ~Script();
+
         /// @brief Set a variable in the script.
         /// @param name The name of the variable.
         /// @param value The value of the variable.

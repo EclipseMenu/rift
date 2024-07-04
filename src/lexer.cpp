@@ -87,6 +87,7 @@ namespace rift {
                     case '*': return Token{TokenType::STAR, "*"};
                     case '/': return Token{TokenType::SLASH, "/"};
                     case '%': return Token{TokenType::PERCENT, "%"};
+                    case '^': return Token{TokenType::CARET, "^"};
                     case '?': return Token{TokenType::QUESTION, "?"};
                     case ':': return Token{TokenType::COLON, ":"};
                     case '<':

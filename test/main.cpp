@@ -5,7 +5,10 @@
 
 int main() {
     // Compile the script
-    auto compiled = rift::compile("Test #{number}, Hello {name}!");
+    std::string script = "Scary ternary expression test: {((2 + 2 * 2) == 6) == true ? 'Hello' : (false ? 'impossible!' : 'yep')}!";
+    auto compiled = rift::compile(script);
+
+    std::cout << "Input: " << script << std::endl << std::endl;
 
     // Check if the script is valid
     if (!compiled) {
@@ -21,5 +24,7 @@ int main() {
     auto result = compiled->run();
 
     // Print the result
-    std::cout << result << std::endl; // Test #420, Hello World!
+    std::cout << "Output: " << std::endl;
+    std::cout << result << std::endl;
 }
+

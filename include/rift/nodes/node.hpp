@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 namespace rift {
 
     /// @brief A node in the AST.
@@ -7,8 +9,14 @@ namespace rift {
     public:
         /// @brief The type of the node.
         enum class Type {
+            Root,
             Segment,
-            Identifier
+            Identifier,
+            Value,
+            UnaryOp,
+            BinaryOp,
+            FunctionCall,
+            TernaryOp,
         };
 
         /// @brief Destruct the node.
@@ -21,6 +29,13 @@ namespace rift {
         /// @brief Accept a visitor.
         /// @param visitor The visitor.
         virtual void accept(class Visitor* visitor) = 0;
+
+        /// @brief Print the node to an output stream. (For debugging)
+        virtual std::ostream& print(std::ostream& out) const = 0;
+
+        friend std::ostream& operator<<(std::ostream& out, const Node& node) {
+            return node.print(out);
+        }
     };
 
 }

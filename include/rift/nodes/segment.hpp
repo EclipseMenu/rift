@@ -24,6 +24,11 @@ namespace rift {
         /// @copydoc Node::accept
         void accept(Visitor* visitor) override;
 
+        /// @copydoc Node::print
+        std::ostream& print(std::ostream& out) const override {
+            return out << "SegmentNode('" << m_text << "')";
+        }
+
     private:
         std::string m_text;
     };

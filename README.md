@@ -36,7 +36,7 @@ You can then use the `rift::format` for a quick format, or use the full syntax l
 #include <rift.hpp>
 
 int main() {
-    rift::Script script* = rift::compile("Test #{number * 2}, Hello {name}!");
+    auto* script = rift::compile("Test #{number * 2}, Hello {name}!");
     
     if (script == nullptr) {
         std::cerr << "Failed to compile script!" << std::endl;
@@ -54,7 +54,7 @@ int main() {
 ## Why should I use RIFT over other libraries?
 RIFT is designed as "Runtime" and "Turing complete" string interpolation library. This means that you can
 perform any calculations and string manipulations directly in the string itself, having to provide only the
-format string and the variables. This makes it useful in cases, where the user can provide their own format strings
+format string and the variables. This makes it useful in cases, where the user can provide their own format strings,
 and you want to allow them to do some basic calculations in the string itself.
 
 ## Building
