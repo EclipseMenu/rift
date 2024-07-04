@@ -50,6 +50,22 @@ int main() {
     std::cout << rift::format("Is 2 + 2 equal to 4? {2 + 2 == 4 ? 'Yes' : 'No'}!") << std::endl;
     // Prints "Is 2 + 2 equal to 4? Yes!"
     
+    // Built-in functions
+    std::cout << rift::format("The length of 'Hello, World!' is {len('Hello, World!')}") << std::endl;
+    // Prints "The length of 'Hello, World!' is 13"
+    std::cout << rift::format("The first character of 'Hello, World!' is {substr('Hello, World!', 0, 1)}") << std::endl;
+    // Prints "The first character of 'Hello, World!' is H"
+    std::cout << rift::format("Random number between 0 and 10: {random(0, 10)}") << std::endl;
+    // Prints "Random number between 0 and 10: <random number>"
+    std::cout << rift::format("TO UPPER: {toUpper('hello, world!')}") << std::endl;
+    // Prints "TO UPPER: HELLO, WORLD!"
+    std::cout << rift::format("to lower: {toLower('HELLO, WORLD!')}") << std::endl;
+    // Prints "to lower: hello, world!"
+    std::cout << rift::format("Trim whitespace: {trim('  Hello, World!  ')}") << std::endl;
+    // Prints "Trim whitespace: Hello, World!"
+    std::cout << rift::format("Replacing: {replace('Hello, World!', 'World', 'Universe')}") << std::endl;
+    // Prints "Replacing: Hello, Universe!"
+    
     // Error handling is built-in
     std::cout << rift::format("This is an invalid expression: {2 + 2!") << std::endl;
     // Prints "<error>" - general case for errors

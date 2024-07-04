@@ -171,6 +171,11 @@ namespace rift {
         /// @return The result of the NOT operation.
         [[nodiscard]] Value operator!() const;
 
+        [[nodiscard]] bool isString() const { return m_type == Type::String; }
+        [[nodiscard]] bool isInteger() const { return m_type == Type::Integer; }
+        [[nodiscard]] bool isFloat() const { return m_type == Type::Float; }
+        [[nodiscard]] bool isBoolean() const { return m_type == Type::Boolean; }
+
     private:
         Type m_type = Type::String;
         std::string m_string; // strings have to be stored separately

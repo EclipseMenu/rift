@@ -1,7 +1,7 @@
 #include <rift/visitor.hpp>
 
 #include <rift/nodes/binaryop.hpp>
-// #include <rift/nodes/functioncall.hpp>
+#include <rift/nodes/functioncall.hpp>
 #include <rift/nodes/identifier.hpp>
 #include <rift/nodes/root.hpp>
 #include <rift/nodes/segment.hpp>
@@ -66,7 +66,8 @@ namespace rift {
     }
 
     void Visitor::visit(FunctionCallNode* node) {
-        write("<Function call not implemented>");
+        auto value = node->getValue(this);
+        write(value.toString());
     }
 
     void Visitor::visit(TernaryNode* node) {

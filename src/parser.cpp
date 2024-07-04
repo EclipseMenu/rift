@@ -1,6 +1,7 @@
 #include <rift/parser.hpp>
 
 #include <rift/nodes/binaryop.hpp>
+#include <rift/nodes/functioncall.hpp>
 #include <rift/nodes/identifier.hpp>
 #include <rift/nodes/segment.hpp>
 #include <rift/nodes/ternary.hpp>
@@ -188,9 +189,7 @@ namespace rift {
             return nullptr;
         }
         advance();
-        std::cerr << "NOT IMPLEMENTED FUNCTION CALL" << std::endl;
-        // return new FunctionCallNode(expression, arguments);
-        return nullptr;
+        return new FunctionCallNode(expression, arguments);
     }
 
     Node* Parser::parseAtom() {
