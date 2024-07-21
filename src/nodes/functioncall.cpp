@@ -161,8 +161,6 @@ namespace rift {
         }
 
         Value round(const std::vector<Value>& args) {
-            // round(3.14) -> 3
-            // round(3.14, 1) -> 3.1
             if (args.size() != 1 && args.size() != 2) {
                 return Value::string("<error: round requires 1 or 2 arguments>");
             }
@@ -182,7 +180,7 @@ namespace rift {
                 return Value::string("<error: round requires float, integer>");
             }
 
-            float rounded = std::roundf(value.value * std::powf(10, (float) precision.value)) / std::powf(10, (float) precision.value);
+            auto rounded = static_cast<float>(std::round(value.value * std::pow(10, (float) precision.value)) / std::pow(10, (float) precision.value));
             return Value::floating(rounded);
         }
 
