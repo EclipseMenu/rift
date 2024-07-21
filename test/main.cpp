@@ -14,7 +14,10 @@
 #define GREEN(text) COLOR_GREEN text COLOR_RESET
 #define VALUE(name, value) {name, rift::Value::from(value)}
 
-static bool TEST_CASE(const std::string& input, const std::string& expected, const std::unordered_map<std::string, rift::Value>& variables = {}) {
+static size_t passed = 0, failed = 0;
+using VarMap = std::unordered_map<std::string, rift::Value>;
+
+static bool TEST_CASE(const std::string& input, const std::string& expected, const VarMap& variables = {}) {
     auto result = rift::format(input, variables);
     if (result == expected) {
         std::cout << GREEN("Test passed:") << " "
@@ -30,15 +33,19 @@ static bool TEST_CASE(const std::string& input, const std::string& expected, con
     return false;
 }
 
-#define RIFT_TEST_CASE(input, expected, ...) do { if (TEST_CASE(input, expected, __VA_ARGS__)) { passed++; } else { failed++; } } while (0)
+static void RIFT_TEST_CASE(const std::string& input, const std::string& expected, const VarMap& variables = {}) {
+    if (TEST_CASE(input, expected, variables)) {
+        passed++;
+    } else {
+        failed++;
+    }
+}
 
 int main() {
     std::cout << "Running tests..." << std::endl;
-    size_t passed = 0, failed = 0;
-
     {
         RIFT_TEST_CASE("Hello, {name}!", "Hello, World!", { VALUE("name", "World") });
-        TEST_CASE("This should fail", "This should pass");
+        TEST_CASE("This should fail", "This should pass"); // Testing whether the test case function works
 
         RIFT_TEST_CASE("Ternary test: {((number + 2 * number) == 6) != true ? 'Hello' : (false ? 'impossible!' : name)}!",
                        "Ternary test: World!",
@@ -59,8 +66,9 @@ int main() {
 
     // Show the results
     std::cout << "\nResults:\n";
-    std::cout << "Tests passed: " << passed << '\n';
-    std::cout << "Tests failed: " << failed << '\n';
+    size_t total = passed + failed;
+    std::cout << "Tests passed: " << passed << " / " << total << std::endl;
+    std::cout << "Tests failed: " << failed << " / " << total << std::endl;
 
     return failed == 0 ? 0 : 1;
 }

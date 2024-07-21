@@ -19,6 +19,8 @@ namespace rift {
             case Type::Boolean:
                 return m_boolean ? "true" : "false";
         }
+
+        return "<invalid value>";
     }
 
     float Value::toFloat() const {
@@ -32,6 +34,8 @@ namespace rift {
             case Type::Boolean:
                 return m_boolean ? 1.0f : 0.0f;
         }
+
+        return 0.0f;
     }
 
     Value Value::operator+(const Value& other) const {
