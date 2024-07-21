@@ -26,9 +26,14 @@ namespace rift {
             m_variables.insert_or_assign(name, value);
         }
 
+        /// @brief Run the script with the specified variables.
+        /// @param variables The variables to use in the script.
+        /// @return The result of the script.
+        std::string run(const std::unordered_map<std::string, Value>& variables);
+
         /// @brief Run the script.
         /// @return The result of the script.
-        std::string run();
+        std::string run() { return run(m_variables); }
 
     private:
         std::vector<class Node*> m_nodes;

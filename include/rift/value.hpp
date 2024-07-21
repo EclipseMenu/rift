@@ -5,6 +5,20 @@
 
 namespace rift {
 
+    namespace util {
+        template <typename T>
+        constexpr bool isStringType() {
+            return std::is_same_v<T, const std::string&> ||
+                std::is_same_v<T, std::string_view> ||
+                std::is_same_v<T, std::string> ||
+                std::is_same_v<T, char*> ||
+                std::is_same_v<T, const char*> ||
+                std::is_same_v<T, char[]> ||
+                std::is_same_v<T, const char[]> ||
+                std::is_same_v<T, char (*)[]>;
+        }
+    }
+
     /// @brief A value in the AST.
     class Value {
     public:
@@ -45,12 +59,7 @@ namespace rift {
 
         template<typename T>
         static Value from(const T& value) {
-            if constexpr (std::is_same_v<T, const std::string&> ||
-                    std::is_same_v<T, std::string_view> ||
-                    std::is_same_v<T, std::string> ||
-                    std::is_same_v<T, char*> ||
-                    std::is_same_v<T, const char*> ||
-                    std::is_same_v<T, char[]>) {
+            if constexpr (util::isStringType<T>()) {
                 return string(value);
             } else if constexpr (std::is_same_v<T, int>) {
                 return integer(value);
@@ -59,7 +68,7 @@ namespace rift {
             } else if constexpr (std::is_same_v<T, bool>) {
                 return boolean(value);
             } else {
-                static_assert(false, "Unsupported type");
+                static_assert(!sizeof(T*), "Unsupported type 'T' for Value::from");
             }
         }
 

@@ -17,8 +17,8 @@ namespace rift {
         }
     }
 
-    std::string Script::run() {
-        Visitor visitor(this);
+    std::string Script::run(const std::unordered_map<std::string, Value>& variables) {
+        Visitor visitor(this, &variables);
         return visitor.evaluate();
     }
 

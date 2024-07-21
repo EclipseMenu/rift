@@ -10,7 +10,8 @@ namespace rift {
     /// @brief A visitor for the AST nodes.
     class Visitor {
     public:
-        explicit Visitor(Script* script) : m_script(script) {}
+        explicit Visitor(Script* script, const std::unordered_map<std::string, Value>* variables) :
+            m_script(script), m_variables(variables) {}
 
         /// @brief Destruct the visitor.
         virtual ~Visitor() = default;
@@ -62,6 +63,7 @@ namespace rift {
     private:
         Script* m_script;
         std::stringstream m_output;
+        const std::unordered_map<std::string, Value>* m_variables;
     };
 
 }

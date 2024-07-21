@@ -16,8 +16,8 @@ namespace rift {
     }
 
     Value Visitor::getVariable(const std::string& name) const {
-        auto it = m_script->m_variables.find(name);
-        if (it != m_script->m_variables.end()) {
+        auto it = m_variables->find(name);
+        if (it != m_variables->end()) {
             return it->second;
         } else {
             return Value::string("null");
@@ -43,8 +43,8 @@ namespace rift {
     }
 
     void Visitor::visit(IdentifierNode* node) {
-        auto it = m_script->m_variables.find(node->getName());
-        if (it != m_script->m_variables.end()) {
+        auto it = m_variables->find(node->getName());
+        if (it != m_variables->end()) {
             write(it->second.toString());
         } else {
             write("null");
