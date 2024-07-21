@@ -5,6 +5,8 @@
 #include <functional>
 #include <random>
 #include <iomanip>
+#include <cmath>
+#include <cctype>
 
 namespace rift {
 
