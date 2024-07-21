@@ -2,6 +2,8 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
+
 #include "rift/value.hpp"
 
 namespace rift {

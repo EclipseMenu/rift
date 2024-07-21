@@ -3,6 +3,7 @@
 #include <rift.hpp>
 #include <string>
 #include <sstream>
+
 #include "nodes/node.hpp"
 
 namespace rift {
