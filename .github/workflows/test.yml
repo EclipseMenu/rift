@@ -1,0 +1,34 @@
+name: Run RIFT tests
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure CMake project
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DRIFT_BUILD_TESTS=ON
+
+      - name: Build project
+        run: cmake --build build
+
+      - name: Run tests
+        run: |
+          cd build
+          ./rift_test
+          if [ $? -ne 0 ]; then
+              exit 1
+          fi

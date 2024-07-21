@@ -8,7 +8,7 @@ add_library(rift STATIC ${RIFT_SOURCES})
 target_include_directories(rift PUBLIC include)
 
 # Tests
-option(RIFT_BUILD_TESTS "Build tests" ON)
+option(RIFT_BUILD_TESTS "Build tests" OFF)
 if (NOT RIFT_BUILD_TESTS)
     return()
 endif()

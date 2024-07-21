@@ -8,14 +8,11 @@ namespace rift {
     namespace util {
         template <typename T>
         constexpr bool isStringType() {
-            return std::is_same_v<T, const std::string&> ||
-                std::is_same_v<T, std::string_view> ||
-                std::is_same_v<T, std::string> ||
-                std::is_same_v<T, char*> ||
-                std::is_same_v<T, const char*> ||
-                std::is_same_v<T, char[]> ||
-                std::is_same_v<T, const char[]> ||
-                std::is_same_v<T, char (*)[]>;
+            using type = std::remove_cvref_t<T>;
+            return std::is_same_v<type, std::string> ||
+                   std::is_same_v<type, std::string_view> ||
+                   std::is_same_v<type, char*> ||
+                   std::is_same_v<type, const char*>;
         }
     }
 
@@ -70,6 +67,11 @@ namespace rift {
             } else {
                 static_assert(!sizeof(T*), "Unsupported type 'T' for Value::from");
             }
+        }
+
+        template <size_t N>
+        static Value from(const char(&value)[N]) {
+            return string(value);
         }
 
         Value() = default;

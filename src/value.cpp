@@ -1,5 +1,7 @@
 #include <rift/value.hpp>
 #include <cmath>
+#include <iomanip>
+#include <sstream>
 
 namespace rift {
 
@@ -9,8 +11,11 @@ namespace rift {
                 return m_string;
             case Type::Integer:
                 return std::to_string(m_integer);
-            case Type::Float:
-                return std::to_string(m_float);
+            case Type::Float: {
+                std::stringstream ss;
+                ss << std::fixed << std::setprecision(2) << m_float;
+                return ss.str();
+            }
             case Type::Boolean:
                 return m_boolean ? "true" : "false";
         }
