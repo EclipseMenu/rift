@@ -11,51 +11,36 @@
 
 namespace rift {
 
-    Script::~Script() {
-        for (auto* node : m_nodes) {
-            delete node;
-        }
-    }
-
     std::string Script::run(const std::unordered_map<std::string, Value>& variables) {
         Visitor visitor(this, &variables);
         return visitor.evaluate();
     }
 
-    Script* compile(const std::string& script) {
+    Result<Script*> compile(const std::string& script) {
         Lexer lexer(script);
         Parser parser(lexer);
 
-        auto* s = new Script();
-        auto* root = parser.parse();
+        auto root = parser.parse();
         if (!root) {
-            //std::cout << "Error: " << parser.getError() << std::endl;
-            delete s;
-            return nullptr;
+            std::stringstream ss;
+            ss << "<ParseError: " << root.getMessage() << ">";
+            return Result<Script*>::error(ss.str());
         }
 
-        s->m_nodes.push_back(root);
-
-        return s;
+        auto* s = new Script;
+        s->m_nodes.push_back(std::unique_ptr<Node>(root.getValue()));
+        return Result<Script*>::success(s);
     }
 
     std::string format(const std::string& script, const std::unordered_map<std::string, Value>& variables) {
-        auto* s = compile(script);
-        if (!s) {
-            delete s;
-            return "<error>";
-        }
+        auto res = compile(script);
+        if (!res) return res.getMessage();
 
-        for (const auto& [name, value] : variables) {
-            s->setVariable(name, value);
-        }
-
-        auto result = s->run();
+        auto* s = res.getValue();
+        auto result = s->run(variables);
         delete s;
 
         return result;
     }
-
-
 
 }

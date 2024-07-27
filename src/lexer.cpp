@@ -50,11 +50,15 @@ namespace rift {
         return m_script[m_index++];
     }
 
+    Token Lexer::createToken(TokenType type, std::string value) const {
+        return Token{type, std::move(value), static_cast<size_t>(m_startIndex), value.size()};
+    }
+
     Token Lexer::nextToken() {
-        size_t start = m_index;
+        m_startIndex = m_index;
 
         if (isEnd()) {
-            return Token{TokenType::END, ""};
+            return createToken(TokenType::END, "");
         }
 
         if (m_expressionDepth > 0) {
@@ -62,7 +66,7 @@ namespace rift {
 
             // Skip whitespace.
             while (true) {
-                if (isEnd()) return Token{TokenType::END, ""};
+                if (isEnd()) return createToken(TokenType::END, "");
                 char c = peek();
                 if (!isWhitespace(c)) break;
                 advance();
@@ -80,68 +84,68 @@ namespace rift {
                         return parseString();
                         break;
 
-                    case '(': return Token{TokenType::LEFT_PAREN, "("};
-                    case ')': return Token{TokenType::RIGHT_PAREN, ")"};
-                    case '+': return Token{TokenType::PLUS, "+"};
-                    case '-': return Token{TokenType::MINUS, "-"};
-                    case '*': return Token{TokenType::STAR, "*"};
-                    case '/': return Token{TokenType::SLASH, "/"};
-                    case '%': return Token{TokenType::PERCENT, "%"};
-                    case '^': return Token{TokenType::CARET, "^"};
-                    case '?': return Token{TokenType::QUESTION, "?"};
-                    case ':': return Token{TokenType::COLON, ":"};
+                    case '(': return createToken(TokenType::LEFT_PAREN, "(");
+                    case ')': return createToken(TokenType::RIGHT_PAREN, ")");
+                    case '+': return createToken(TokenType::PLUS, "+");
+                    case '-': return createToken(TokenType::MINUS, "-");
+                    case '*': return createToken(TokenType::STAR, "*");
+                    case '/': return createToken(TokenType::SLASH, "/");
+                    case '%': return createToken(TokenType::PERCENT, "%");
+                    case '^': return createToken(TokenType::CARET, "^");
+                    case '?': return createToken(TokenType::QUESTION, "?");
+                    case ':': return createToken(TokenType::COLON, ":");
                     case '<':
                         if (peek() == '=') {
                             advance();
-                            return Token{TokenType::LESS_EQUAL, "<="};
+                            return createToken(TokenType::LESS_EQUAL, "<=");
                         } else {
-                            return Token{TokenType::LESS, "<"};
+                            return createToken(TokenType::LESS, "<");
                         }
                     case '>':
                         if (peek() == '=') {
                             advance();
-                            return Token{TokenType::GREATER_EQUAL, ">="};
+                            return createToken(TokenType::GREATER_EQUAL, ">=");
                         } else {
-                            return Token{TokenType::GREATER, ">"};
+                            return createToken(TokenType::GREATER, ">");
                         }
                     case '=':
                         if (peek() == '=') {
                             advance();
-                            return Token{TokenType::EQUAL_EQUAL, "=="};
+                            return createToken(TokenType::EQUAL_EQUAL, "==");
                         } else {
-                            return Token{TokenType::ERROR, "expected double equals sign"};
+                            return createToken(TokenType::ERROR, "expected double equals sign");
                         }
                     case '!':
                         if (peek() == '=') {
                             advance();
-                            return Token{TokenType::NOT_EQUAL, "!="};
+                            return createToken(TokenType::NOT_EQUAL, "!=");
                         } else {
-                            return Token{TokenType::NOT, "!"};
+                            return createToken(TokenType::NOT, "!");
                         }
                     case '&':
                         if (peek() == '&') {
                             advance();
-                            return Token{TokenType::AND, "&&"};
+                            return createToken(TokenType::AND, "&&");
                         } else {
-                            return Token{TokenType::ERROR, "expected double ampersand"};
+                            return createToken(TokenType::ERROR, "expected double ampersand");
                         }
                     case '|':
                         if (peek() == '|') {
                             advance();
-                            return Token{TokenType::OR, "||"};
+                            return createToken(TokenType::OR, "||");
                         } else {
-                            return Token{TokenType::ERROR, "expected double pipe"};
+                            return createToken(TokenType::ERROR, "expected double pipe");
                         }
-                    case '.': return Token{TokenType::DOT, "."};
-                    case ',': return Token{TokenType::COMMA, ","};
+                    case '.': return createToken(TokenType::DOT, ".");
+                    case ',': return createToken(TokenType::COMMA, ",");
                     case '{':
                         m_expressionDepth++;
-                        return Token{TokenType::LEFT_BRACE, "{"};
+                        return createToken(TokenType::LEFT_BRACE, "{");
                     case '}':
                         m_expressionDepth--;
-                        return Token{TokenType::RIGHT_BRACE, "}"};
+                        return createToken(TokenType::RIGHT_BRACE, "}");
                     default:
-                        return Token{TokenType::ERROR, "unexpected character '" + std::string(1, c) + "'"};
+                        return createToken(TokenType::ERROR, "unexpected character '" + std::string(1, c) + "'");
                 }
             }
         } else {
@@ -151,7 +155,7 @@ namespace rift {
             if (c == '{') {
                 // We are entering an expression.
                 m_expressionDepth++;
-                return Token{TokenType::LEFT_BRACE, "{"};
+                return createToken(TokenType::LEFT_BRACE, "{");
             }
             else {
                 while (!isEnd() && peek() != '{' && peekNext() != '{') {
@@ -162,7 +166,7 @@ namespace rift {
                     }
                 }
 
-                return Token{TokenType::Segment, m_script.substr(start, m_index - start)};
+                return createToken(TokenType::Segment, m_script.substr(m_startIndex, m_index - m_startIndex));
             }
         }
     }
@@ -182,10 +186,10 @@ namespace rift {
         }
 
         if (hasDot) {
-            return Token{TokenType::FLOAT, m_script.substr(start, m_index - start)};
+            return createToken(TokenType::FLOAT, m_script.substr(start, m_index - start));
         }
 
-        return Token{TokenType::INTEGER, m_script.substr(start, m_index - start)};
+        return createToken(TokenType::INTEGER, m_script.substr(start, m_index - start));
     }
 
     Token Lexer::parseString() {
@@ -195,19 +199,19 @@ namespace rift {
         }
 
         if (isEnd()) {
-            return Token{TokenType::ERROR, "unterminated string"};
+            return createToken(TokenType::ERROR, "unterminated string");
         }
 
         advance(); // Consume the closing quote.
-        return Token{TokenType::STRING, m_script.substr(start, m_index - start)};
+        return createToken(TokenType::STRING, m_script.substr(start, m_index - start));
     }
 
     Token Lexer::parseIdentifier() {
         size_t start = m_index - 1;
 
-        while (isAlphaNumeric(peek())) advance();
+        while (isAlphaNumeric(peek()) || peek() == '_') advance();
 
-        return Token{TokenType::IDENTIFIER, m_script.substr(start, m_index - start)};
+        return createToken(TokenType::IDENTIFIER, m_script.substr(start, m_index - start));
     }
 
 }

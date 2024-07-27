@@ -51,6 +51,7 @@ int main() {
                        "Ternary test: World!",
                        { VALUE("number", 2), VALUE("name", "World") });
 
+        RIFT_TEST_CASE("{snake_case_variable}", "Hi!", { VALUE("snake_case_variable", "Hi!") });
         RIFT_TEST_CASE("2 + 2 * 2 = {2 + 2 * 2}!", "2 + 2 * 2 = 6!");
         RIFT_TEST_CASE("sqrt(4): {sqrt(4)}", "sqrt(4): 2.00");
         RIFT_TEST_CASE("2 + 2 * {number} = {2 + 2 * number}!", "2 + 2 * 3 = 8!", { VALUE("number", 3) });

@@ -3,16 +3,16 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 
+#include "rift/result.hpp"
 #include "rift/value.hpp"
+#include "rift/nodes/node.hpp"
 
 namespace rift {
 
     class Script {
     public:
-        /// @brief Destructor.
-        ~Script();
-
         /// @brief Set a variable in the script.
         /// @param name The name of the variable.
         /// @param value The value of the variable.
@@ -38,16 +38,16 @@ namespace rift {
         std::string run() { return run(m_variables); }
 
     private:
-        std::vector<class Node*> m_nodes;
+        std::vector<std::unique_ptr<Node>> m_nodes;
         std::unordered_map<std::string, Value> m_variables;
 
         friend class Visitor;
-        friend Script* compile(const std::string& script);
+        friend Result<Script*> compile(const std::string& script);
     };
 
     /// @brief Compile a script.
     /// @param script The script to compile.
-    Script* compile(const std::string& script);
+    Result<Script*> compile(const std::string& script);
 
     /// @brief Compile and run a script.
     /// @param script The script to run.

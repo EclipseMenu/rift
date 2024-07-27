@@ -37,9 +37,13 @@ namespace rift {
         /// @brief Parse an identifier.
         Token parseIdentifier();
 
+        /// @brief Create a token with current index.
+        Token createToken(TokenType type, std::string value) const;
+
     private:
         std::string m_script;
         int32_t m_index = 0;
+        int32_t m_startIndex = 0;
         size_t m_expressionDepth = 0;
     };
 

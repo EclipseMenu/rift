@@ -51,8 +51,11 @@ namespace rift {
     struct Token {
         TokenType type;
         std::string value;
+        size_t startIndex;
+        size_t endIndex;
 
-        Token(TokenType type, std::string value) : type(type), value(std::move(value)) {}
+        Token(TokenType type, std::string value, size_t startIndex, size_t endIndex)
+            : type(type), value(std::move(value)), startIndex(startIndex), endIndex(endIndex) {}
     };
 
 }

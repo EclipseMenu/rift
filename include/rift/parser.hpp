@@ -2,8 +2,9 @@
 
 #include <utility>
 
+#include "nodes/root.hpp"
+#include "result.hpp"
 #include "lexer.hpp"
-#include "rift/nodes/root.hpp"
 
 namespace rift {
 
@@ -42,14 +43,11 @@ namespace rift {
         explicit Parser(Lexer lexer) : m_lexer(std::move(lexer)) {}
 
         /// @brief Parse the tokens into an AST.
-        /// @return The AST.
-        RootNode* parse();
+        /// @return Result object containing the root node.
+        Result<RootNode*> parse();
 
         /// @brief Check if the parser is at the end of the tokens.
         [[nodiscard]] bool isAtEnd() const { return m_currentToken.type == TokenType::END; }
-
-        /// @brief Get the error message.
-        [[nodiscard]] const std::string& getError() const { return m_error; }
 
     private:
         /// @brief Advance to the next token.
@@ -58,21 +56,23 @@ namespace rift {
 
         // Parse functions
 
-        Node* parseBlock();
-        Node* parseExpression();
-        Node* parseTernaryOp();
-        Node* parseComparisonExpression();
-        Node* parseArithmeticExpression();
-        Node* parseTerm();
-        Node* parseFactor();
-        Node* parsePower();
-        Node* parseCall();
-        Node* parseAtom();
+        Result<Node*> parseBlock();
+        Result<Node*> parseExpression();
+        Result<Node*> parseTernaryOp();
+        Result<Node*> parseComparisonExpression();
+        Result<Node*> parseArithmeticExpression();
+        Result<Node*> parseTerm();
+        Result<Node*> parseFactor();
+        Result<Node*> parsePower();
+        Result<Node*> parseCall();
+        Result<Node*> parseAtom();
+
+        [[nodiscard]] std::string getErrorMessage(const std::string& message) const;
 
     private:
         Lexer m_lexer;
-        Token m_currentToken = { TokenType::END, "" };
-        std::string m_error;
+        Token m_currentToken = { TokenType::END, "", 0, 0 };
+        size_t m_index = 0;
     };
 
 }

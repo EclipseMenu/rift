@@ -9,227 +9,239 @@
 #include <rift/nodes/value.hpp>
 
 #include <iostream>
+#include <sstream>
 
 namespace rift {
 
-    RootNode* Parser::parse() {
+    std::string Parser::getErrorMessage(const std::string& message) const {
+        std::stringstream ss;
+        ss << message << " at index " << m_index;
+        return ss.str();
+    }
+
+    Result<RootNode*> Parser::parse() {
         auto* root = new RootNode;
         advance();
         while (!isAtEnd()) {
-            auto block = parseBlock();
-            if (block == nullptr) {
+            auto res = parseBlock();
+            if (!res) {
                 delete root;
-                return nullptr;
+                return Result<RootNode*>::error(res.getMessage());
             }
-            root->addChild(block);
+            root->addChild(res.getValue());
         }
 
-        return root;
+        return Result<RootNode*>::success(root);
     }
 
-    Node* Parser::parseBlock() {
+    Result<Node*> Parser::parseBlock() {
         if (m_currentToken.type == TokenType::LEFT_BRACE) {
             advance();
-            auto *expression = parseExpression();
-            if (expression == nullptr) {
-                return nullptr;
+            auto expressionRes = parseExpression();
+            if (!expressionRes) {
+                return expressionRes;
             }
             if (m_currentToken.type != TokenType::RIGHT_BRACE) {
-                m_error = "Expected '}'";
-                return nullptr;
+                return Result<Node*>::error(getErrorMessage("Expected '}'"));
             }
             advance();
-            return expression;
+            return expressionRes;
         } else {
-            auto *segment = new SegmentNode(m_currentToken.value);
+            auto* segment = new SegmentNode(m_currentToken.value);
             advance();
-            return segment;
+            return Result<Node*>::success(segment);
         }
     }
 
-    Node* Parser::parseExpression() {
-        auto *expression = parseTernaryOp();
-        if (expression == nullptr) {
+    Result<Node*> Parser::parseExpression() {
+        auto expression = parseTernaryOp();
+        if (!expression) {
             return parseComparisonExpression();
         }
         return expression;
     }
 
-    Node* Parser::parseTernaryOp() {
-        auto *condition = parseComparisonExpression();
-        if (condition == nullptr) {
-            return nullptr;
-        }
-        if (m_currentToken.type != TokenType::QUESTION) {
+    Result<Node*> Parser::parseTernaryOp() {
+        auto condition = parseComparisonExpression();
+        if (!condition || m_currentToken.type != TokenType::QUESTION) {
             return condition;
         }
         advance();
-        auto *trueExpression = parseExpression();
-        if (trueExpression == nullptr) {
-            return nullptr;
+        auto trueExpression = parseExpression();
+        if (!trueExpression) {
+            delete condition.getValue();
+            return trueExpression;
         }
         if (m_currentToken.type != TokenType::COLON) {
-            m_error = "Expected ':'";
-            return nullptr;
+            return Result<Node*>::error(getErrorMessage("Expected ':'"));
         }
         advance();
-        auto *falseExpression = parseExpression();
-        if (falseExpression == nullptr) {
-            return nullptr;
+        auto falseExpression = parseExpression();
+        if (!falseExpression) {
+            delete trueExpression.getValue();
+            delete condition.getValue();
+            return falseExpression;
         }
-        return new TernaryNode(condition, trueExpression, falseExpression);
+        auto* ternary = new TernaryNode(condition.getValue(), trueExpression.getValue(), falseExpression.getValue());
+        return Result<Node*>::success(ternary);
     }
 
-    Node* Parser::parseComparisonExpression() {
-        auto *expression = parseArithmeticExpression();
-        if (expression == nullptr) {
-            return nullptr;
+    Result<Node*> Parser::parseComparisonExpression() {
+        auto res = parseArithmeticExpression();
+        if (!res) {
+            return res;
         }
+        auto* expression = res.getValue();
         while (m_currentToken.type == TokenType::EQUAL_EQUAL || m_currentToken.type == TokenType::NOT_EQUAL ||
                m_currentToken.type == TokenType::LESS || m_currentToken.type == TokenType::LESS_EQUAL ||
                m_currentToken.type == TokenType::GREATER || m_currentToken.type == TokenType::GREATER_EQUAL) {
             auto type = m_currentToken.type;
             advance();
-            auto *right = parseArithmeticExpression();
-            if (right == nullptr) {
-                return nullptr;
+            auto right = parseArithmeticExpression();
+            if (!right) {
+                delete expression;
+                return right;
             }
-            expression = new BinaryOpNode(expression, right, type);
+            expression = new BinaryOpNode(expression, right.getValue(), type);
         }
-        return expression;
+        return Result<Node*>::success(expression);
     }
 
-    Node* Parser::parseArithmeticExpression() {
-        auto *expression = parseTerm();
-        if (expression == nullptr) {
-            return nullptr;
-        }
+    Result<Node*> Parser::parseArithmeticExpression() {
+        auto res = parseTerm();
+        if (!res) return res;
+        auto* expression = res.getValue();
         while (m_currentToken.type == TokenType::PLUS || m_currentToken.type == TokenType::MINUS) {
             auto type = m_currentToken.type;
             advance();
-            auto *right = parseTerm();
-            if (right == nullptr) {
-                return nullptr;
+            auto right = parseTerm();
+            if (!right) {
+                delete expression;
+                return right;
             }
-            expression = new BinaryOpNode(expression, right, type);
+            expression = new BinaryOpNode(expression, right.getValue(), type);
         }
-        return expression;
+        return Result<Node*>::success(expression);
     }
 
-    Node* Parser::parseTerm() {
-        auto *expression = parseFactor();
-        if (expression == nullptr) {
-            return nullptr;
-        }
+    Result<Node*> Parser::parseTerm() {
+        auto res = parseFactor();
+        if (!res) return res;
+        auto* expression = res.getValue();
         while (m_currentToken.type == TokenType::STAR || m_currentToken.type == TokenType::SLASH ||
                m_currentToken.type == TokenType::PERCENT) {
             auto type = m_currentToken.type;
             advance();
-            auto *right = parseFactor();
-            if (right == nullptr) {
-                return nullptr;
+            auto right = parseFactor();
+            if (!right) {
+                delete expression;
+                return right;
             }
-            expression = new BinaryOpNode(expression, right, type);
+            expression = new BinaryOpNode(expression, right.getValue(), type);
         }
-        return expression;
+        return Result<Node*>::success(expression);
     }
 
-    Node* Parser::parseFactor() {
+    Result<Node*> Parser::parseFactor() {
         if (m_currentToken.type == TokenType::PLUS || m_currentToken.type == TokenType::MINUS) {
             auto type = m_currentToken.type;
             advance();
-            auto *factor = parseFactor();
-            if (factor == nullptr) {
-                return nullptr;
-            }
-            return new UnaryOpNode(type, factor);
+            auto factor = parseFactor();
+            if (!factor) return factor;
+            auto* unary = new UnaryOpNode(type, factor.getValue());
+            return Result<Node*>::success(unary);
         }
         return parsePower();
     }
 
-    Node* Parser::parsePower() {
-        auto *expression = parseCall();
-        if (expression == nullptr) {
-            return nullptr;
-        }
+    Result<Node*> Parser::parsePower() {
+        auto res = parseCall();
+        if (!res) return res;
+        auto* expression = res.getValue();
         while (m_currentToken.type == TokenType::CARET) {
             advance();
-            auto *right = parseFactor();
-            if (right == nullptr) {
-                return nullptr;
+            auto right = parseFactor();
+            if (!right) {
+                delete expression;
+                return right;
             }
-            expression = new BinaryOpNode(expression, right, TokenType::CARET);
+            expression = new BinaryOpNode(expression, right.getValue(), TokenType::CARET);
         }
-        return expression;
+        return Result<Node*>::success(expression);
     }
 
-    Node* Parser::parseCall() {
-        auto *expression = parseAtom();
-        if (expression == nullptr) {
-            return nullptr;
-        }
-        if (m_currentToken.type != TokenType::LEFT_PAREN) {
-            return expression;
+    Result<Node*> Parser::parseCall() {
+        auto res = parseAtom();
+        if (!res || m_currentToken.type != TokenType::LEFT_PAREN) {
+            return res;
         }
         advance();
+        auto* expression = res.getValue();
         std::vector<Node*> arguments;
         while (m_currentToken.type != TokenType::RIGHT_PAREN) {
-            auto *argument = parseExpression();
-            if (argument == nullptr) {
-                return nullptr;
+            auto argument = parseExpression();
+            if (!argument) {
+                delete expression;
+                for (auto arg : arguments) {
+                    delete arg;
+                }
+                return argument;
             }
-            arguments.push_back(argument);
+            arguments.push_back(argument.getValue());
             if (m_currentToken.type != TokenType::COMMA) {
                 break;
             }
             advance();
         }
         if (m_currentToken.type != TokenType::RIGHT_PAREN) {
-            m_error = "Expected ')'";
-            return nullptr;
+            delete expression;
+            for (auto arg : arguments)
+                delete arg;
+            return Result<Node*>::error(getErrorMessage("Expected ')'"));
         }
         advance();
-        return new FunctionCallNode(expression, arguments);
+        auto* functionCall = new FunctionCallNode(expression, arguments);
+        return Result<Node*>::success(functionCall);
     }
 
-    Node* Parser::parseAtom() {
+    Result<Node*> Parser::parseAtom() {
         if (m_currentToken.type == TokenType::FLOAT) {
             auto *value = new ValueNode(Value::from(std::stof(m_currentToken.value)));
             advance();
-            return value;
+            return Result<Node*>::success(value);
         } else if (m_currentToken.type == TokenType::INTEGER) {
             auto *value = new ValueNode(Value::from(std::stoi(m_currentToken.value)));
             advance();
-            return value;
+            return Result<Node*>::success(value);
         } else if (m_currentToken.type == TokenType::STRING) {
             auto *value = new ValueNode(Value::from(m_currentToken.value.substr(1, m_currentToken.value.size() - 2)));
             advance();
-            return value;
+            return Result<Node*>::success(value);
         } else if (m_currentToken.type == TokenType::IDENTIFIER) {
             auto *identifier = new IdentifierNode(m_currentToken.value);
             advance();
-            return identifier;
+            return Result<Node*>::success(identifier);
         } else if (m_currentToken.type == TokenType::LEFT_PAREN) {
             advance();
-            auto *expression = parseExpression();
-            if (expression == nullptr) {
-                return nullptr;
+            auto expression = parseExpression();
+            if (!expression) {
+                return expression;
             }
             if (m_currentToken.type != TokenType::RIGHT_PAREN) {
-                m_error = "Expected ')'";
-                return nullptr;
+                delete expression.getValue();
+                return Result<Node*>::error(getErrorMessage("Expected ')'"));
             }
             advance();
             return expression;
         } else {
-            m_error = "Expected number, string, identifier, or '('";
-            return nullptr;
+            return Result<Node*>::error(getErrorMessage("Expected number, string, identifier, or '('"));
         }
     }
 
     Token Parser::advance() {
         auto token = m_currentToken;
         m_currentToken = m_lexer.nextToken();
+        m_index = m_currentToken.startIndex + 1;
         return token;
     }
 
