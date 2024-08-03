@@ -57,6 +57,7 @@ int main() {
         RIFT_TEST_CASE("sqrt(4): {sqrt(4)}", "sqrt(4): 2.00");
         RIFT_TEST_CASE("{0 / 0} {10 / false}", "inf inf"); // integer division by zero should not crash
         RIFT_TEST_CASE("{0.0 % 0.0} {0 % 0} {false % false}", "inf inf inf"); // same with modulo operator
+        RIFT_TEST_CASE("{'=' * 5.0}", "====="); // making sure 5.0 is not interpreted as 0x40a00000
         RIFT_TEST_CASE("2 + 2 * {number} = {2 + 2 * number}!", "2 + 2 * 3 = 8!", { VALUE("number", 3) });
         RIFT_TEST_CASE("Is 2 + 2 equal to 4? {2 + 2 == 4}!", "Is 2 + 2 equal to 4? true!");
         RIFT_TEST_CASE("Is 2 + 2 equal to 4? {2 + 2 == 4 ? 'Yes' : 'No'}!", "Is 2 + 2 equal to 4? Yes!");
