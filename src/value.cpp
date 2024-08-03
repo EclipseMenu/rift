@@ -142,23 +142,42 @@ namespace rift {
 
         // If either value is a boolean, convert them to integers and divide them.
         if (m_type == Type::Boolean || other.m_type == Type::Boolean) {
+            // check for division by zero
+            if (other.m_integer == 0) {
+                return Value::floating(std::numeric_limits<float>::infinity());
+            }
             return Value::integer(m_integer / other.m_integer);
         }
 
         // If both values are numbers, divide them.
         if (m_type == Type::Integer && other.m_type == Type::Integer) {
+            // check for division by zero
+            if (other.m_integer == 0) {
+                return Value::floating(std::numeric_limits<float>::infinity());
+            }
             return Value::integer(m_integer / other.m_integer);
         }
 
         if (m_type == Type::Float && other.m_type == Type::Float) {
+            // check for division by zero
+            if (other.m_float == 0) {
+                return Value::floating(std::numeric_limits<float>::infinity());
+            }
             return Value::floating(m_float / other.m_float);
         }
 
         // If one of the values is a float, convert the other to a float and divide them.
         if (m_type == Type::Float) {
+            // check for division by zero
+            if (other.toFloat() == 0) {
+                return Value::floating(std::numeric_limits<float>::infinity());
+            }
             return Value::floating(m_float / other.toFloat());
         }
 
+        if (other.toFloat() == 0) {
+            return Value::floating(std::numeric_limits<float>::infinity());
+        }
         return Value::floating(toFloat() / other.toFloat());
     }
 

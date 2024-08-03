@@ -51,9 +51,11 @@ int main() {
                        "Ternary test: World!",
                        { VALUE("number", 2), VALUE("name", "World") });
 
+        RIFT_TEST_CASE("{ 2 + }", "<ParseError: Expected number, string, identifier, or '(' at index 6>");
         RIFT_TEST_CASE("{snake_case_variable}", "Hi!", { VALUE("snake_case_variable", "Hi!") });
         RIFT_TEST_CASE("2 + 2 * 2 = {2 + 2 * 2}!", "2 + 2 * 2 = 6!");
         RIFT_TEST_CASE("sqrt(4): {sqrt(4)}", "sqrt(4): 2.00");
+        RIFT_TEST_CASE("{0 / 0} {10 / false}", "inf inf"); // integer division by zero should not crash
         RIFT_TEST_CASE("2 + 2 * {number} = {2 + 2 * number}!", "2 + 2 * 3 = 8!", { VALUE("number", 3) });
         RIFT_TEST_CASE("Is 2 + 2 equal to 4? {2 + 2 == 4}!", "Is 2 + 2 equal to 4? true!");
         RIFT_TEST_CASE("Is 2 + 2 equal to 4? {2 + 2 == 4 ? 'Yes' : 'No'}!", "Is 2 + 2 equal to 4? Yes!");
