@@ -21,7 +21,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DRIFT_BUILD_TESTS=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang 
+          cmake .. -DRIFT_BUILD_TESTS=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -G Ninja
 
       - name: Build project
         run: cmake --build build
