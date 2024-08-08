@@ -13,7 +13,7 @@
 
 namespace rift {
 
-    std::string Parser::getErrorMessage(const std::string& message) const {
+    std::string Parser::getErrorMessage(std::string_view message) const {
         std::stringstream ss;
         ss << message << " at index " << m_index;
         return ss.str();

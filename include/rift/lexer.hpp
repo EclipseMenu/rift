@@ -9,7 +9,7 @@ namespace rift {
     public:
         /// @brief Construct a lexer.
         /// @param script The script to lex.
-        explicit Lexer(std::string  script);
+        explicit Lexer(std::string_view script);
 
         /// @brief Get the next token.
         /// @return The next token.
@@ -38,10 +38,10 @@ namespace rift {
         Token parseIdentifier();
 
         /// @brief Create a token with current index.
-        Token createToken(TokenType type, std::string value) const;
+        [[nodiscard]] Token createToken(TokenType type, std::string value) const;
 
     private:
-        std::string m_script;
+        std::string_view m_script;
         int32_t m_index = 0;
         int32_t m_startIndex = 0;
         size_t m_expressionDepth = 0;

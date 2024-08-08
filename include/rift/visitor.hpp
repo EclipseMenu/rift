@@ -51,19 +51,19 @@ namespace rift {
 
         /// @brief Write a string to the output.
         /// @param text The text to write.
-        void write(const std::string& text);
+        void write(std::string_view text);
 
         /// @brief Get the output.
         /// @return The output.
-        [[nodiscard]] std::string getOutput() const;
+        [[nodiscard]] const std::string& getOutput() const;
 
         /// @brief Evaluate the script.
         /// @return The result of the script.
-        [[nodiscard]] std::string evaluate();
+        [[nodiscard]] const std::string& evaluate();
 
     private:
         Script* m_script;
-        std::stringstream m_output;
+        std::string m_output;
         const std::unordered_map<std::string, Value>* m_variables;
     };
 

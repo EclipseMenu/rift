@@ -11,8 +11,8 @@
 
 namespace rift {
 
-    void Visitor::write(const std::string& text) {
-        m_output << text;
+    void Visitor::write(std::string_view text) {
+        m_output += text;
     }
 
     Value Visitor::getVariable(const std::string& name) const {
@@ -24,8 +24,8 @@ namespace rift {
         }
     }
 
-    std::string Visitor::getOutput() const {
-        return m_output.str();
+    const std::string& Visitor::getOutput() const {
+        return m_output;
     }
 
     void Visitor::visit(Node* node) {
@@ -75,7 +75,7 @@ namespace rift {
         write(value.toString());
     }
 
-    std::string Visitor::evaluate() {
+    const std::string& Visitor::evaluate() {
         for (auto& node : m_script->m_nodes) {
             node->accept(this);
         }

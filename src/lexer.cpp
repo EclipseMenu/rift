@@ -3,8 +3,8 @@
 
 namespace rift {
 
-    Lexer::Lexer(std::string script)
-        : m_script(std::move(script)) {}
+    Lexer::Lexer(std::string_view script)
+        : m_script(script) {}
 
     inline bool isWhitespace(char c) {
         return c == ' ' || c == '\t' || c == '\n' || c == '\r';
@@ -166,7 +166,7 @@ namespace rift {
                     }
                 }
 
-                return createToken(TokenType::Segment, m_script.substr(m_startIndex, m_index - m_startIndex));
+                return createToken(TokenType::Segment, std::string(m_script.substr(m_startIndex, m_index - m_startIndex)));
             }
         }
     }
@@ -186,10 +186,10 @@ namespace rift {
         }
 
         if (hasDot) {
-            return createToken(TokenType::FLOAT, m_script.substr(start, m_index - start));
+            return createToken(TokenType::FLOAT, std::string(m_script.substr(start, m_index - start)));
         }
 
-        return createToken(TokenType::INTEGER, m_script.substr(start, m_index - start));
+        return createToken(TokenType::INTEGER, std::string(m_script.substr(start, m_index - start)));
     }
 
     Token Lexer::parseString() {
@@ -203,7 +203,7 @@ namespace rift {
         }
 
         advance(); // Consume the closing quote.
-        return createToken(TokenType::STRING, m_script.substr(start, m_index - start));
+        return createToken(TokenType::STRING, std::string(m_script.substr(start, m_index - start)));
     }
 
     Token Lexer::parseIdentifier() {
@@ -211,7 +211,7 @@ namespace rift {
 
         while (isAlphaNumeric(peek()) || peek() == '_') advance();
 
-        return createToken(TokenType::IDENTIFIER, m_script.substr(start, m_index - start));
+        return createToken(TokenType::IDENTIFIER, std::string(m_script.substr(start, m_index - start)));
     }
 
 }

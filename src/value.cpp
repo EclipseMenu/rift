@@ -97,19 +97,19 @@ namespace rift {
     Value Value::operator*(const Value& other) const {
         // If first value is a string, repeat it n times where n is the second value.
         if (m_type == Type::String && (other.m_type == Type::Integer || other.m_type == Type::Float)) {
-            std::stringstream result;
+            std::string result;
             auto count = other.m_type == Type::Integer ? other.m_integer : static_cast<int>(other.m_float);
             for (int i = 0; i < count; ++i) {
-                result << m_string;
+                result += m_string;
             }
-            return Value::string(result.str());
+            return Value::string(std::move(result));
         } else if (other.m_type == Type::String && (m_type == Type::Integer || m_type == Type::Float)) {
-            std::stringstream result;
+            std::string result;
             auto count = m_type == Type::Integer ? m_integer : static_cast<int>(m_float);
             for (int i = 0; i < count; ++i) {
-                result << other.m_string;
+                result += other.m_string;
             }
-            return Value::string(result.str());
+            return Value::string(std::move(result));
         } else if (m_type == Type::String || other.m_type == Type::String) {
             return Value::string("<error: multiplication of strings>");
         }

@@ -16,7 +16,7 @@ namespace rift {
         return visitor.evaluate();
     }
 
-    Result<Script*> compile(const std::string& script) {
+    Result<Script*> compile(std::string_view script) {
         Lexer lexer(script);
         Parser parser(lexer);
 
@@ -32,7 +32,7 @@ namespace rift {
         return Result<Script*>::success(s);
     }
 
-    std::string format(const std::string& script, const std::unordered_map<std::string, Value>& variables) {
+    std::string format(std::string_view script, const std::unordered_map<std::string, Value>& variables) {
         auto res = compile(script);
         if (!res) return res.getMessage();
 

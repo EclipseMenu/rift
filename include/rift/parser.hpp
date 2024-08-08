@@ -40,7 +40,7 @@ namespace rift {
     public:
         /// @brief Construct the parser.
         /// @param tokens The tokens to parse.
-        explicit Parser(Lexer lexer) : m_lexer(std::move(lexer)) {}
+        explicit Parser(Lexer lexer) : m_lexer(lexer) {}
 
         /// @brief Parse the tokens into an AST.
         /// @return Result object containing the root node.
@@ -67,7 +67,7 @@ namespace rift {
         Result<Node*> parseCall();
         Result<Node*> parseAtom();
 
-        [[nodiscard]] std::string getErrorMessage(const std::string& message) const;
+        [[nodiscard]] std::string getErrorMessage(std::string_view message) const;
 
     private:
         Lexer m_lexer;
