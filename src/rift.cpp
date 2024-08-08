@@ -7,7 +7,7 @@
 #include <rift/nodes/value.hpp>
 
 #include <iostream>
-#include <format>
+#include <fmt/format.h>
 #include "rift/parser.hpp"
 
 namespace rift {
@@ -23,7 +23,7 @@ namespace rift {
 
         auto root = parser.parse();
         if (!root) {
-            return Result<Script*>::error(std::format("<ParseError: {}>", root.getMessage()));
+            return Result<Script*>::error(fmt::format("<ParseError: {}>", root.getMessage()));
         }
 
         auto* s = new Script;

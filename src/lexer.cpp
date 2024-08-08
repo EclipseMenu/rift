@@ -1,6 +1,6 @@
 #include <rift/lexer.hpp>
 #include <utility>
-#include <format>
+#include <fmt/format.h>
 
 namespace rift {
 
@@ -130,7 +130,7 @@ namespace rift {
                         m_expressionDepth--;
                         return createToken(TokenType::RIGHT_BRACE, "}");
                     default:
-                        return createToken(TokenType::ERROR, std::format("unexpected character '{}'", c));
+                        return createToken(TokenType::ERROR, fmt::format("unexpected character '{}'", c));
                 }
             }
         } else {

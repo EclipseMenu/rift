@@ -9,12 +9,12 @@
 #include <rift/nodes/value.hpp>
 
 #include <iostream>
-#include <format>
+#include <fmt/format.h>
 
 namespace rift {
 
     std::string Parser::getErrorMessage(std::string_view message) const {
-        return std::format("{} at index {}", message, m_index);
+        return fmt::format("{} at index {}", message, m_index);
     }
 
     Result<RootNode*> Parser::parse() {

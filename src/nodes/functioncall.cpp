@@ -4,7 +4,7 @@
 
 #include <functional>
 #include <random>
-#include <format>
+#include <fmt/format.h>
 #include <cmath>
 #include <cctype>
 #include <optional>
@@ -378,7 +378,7 @@ namespace rift {
                 return Value::string("<error: precision requires float, integer>");
             }
 
-            return Value::string(std::format("{:.{}f}", value.value(), precision.value()));
+            return Value::string(fmt::format("{:.{}f}", value.value(), precision.value()));
         }
 
         Value leftPad(const std::vector<Value>& args) {
@@ -514,7 +514,7 @@ namespace rift {
         auto funcName = reinterpret_cast<const IdentifierNode*>(m_name)->getName();
         auto function = findFunction(funcName);
         if (!function) {
-            return Value::string(std::format("<error: unknown function '{}'>", funcName));
+            return Value::string(fmt::format("<error: unknown function '{}'>", funcName));
         }
 
         std::vector<Value> arguments;
