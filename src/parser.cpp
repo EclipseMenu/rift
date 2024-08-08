@@ -51,17 +51,9 @@ namespace rift {
         }
     }
 
-    Result<Node*> Parser::parseExpression() {
-        auto expression = parseTernaryOp();
-        if (!expression) {
-            return parseComparisonExpression();
-        }
-        return expression;
-    }
-
     Result<Node*> Parser::parseTernaryOp() {
         auto condition = parseComparisonExpression();
-        if (!condition || m_currentToken.type != TokenType::QUESTION) {
+        if (m_currentToken.type != TokenType::QUESTION || !condition) {
             return condition;
         }
         advance();
@@ -174,7 +166,7 @@ namespace rift {
 
     Result<Node*> Parser::parseCall() {
         auto res = parseAtom();
-        if (!res || m_currentToken.type != TokenType::LEFT_PAREN) {
+        if (m_currentToken.type != TokenType::LEFT_PAREN || !res) {
             return res;
         }
         advance();
@@ -206,19 +198,19 @@ namespace rift {
         return Result<Node*>::success(functionCall);
     }
 
-    float readFloat(std::string_view str) {
-        return std::stof(std::string(str));
-    }
-
     int readInt(std::string_view str) {
-        return std::stoi(std::string(str));
+        int result = 0;
+        for (char c : str) {
+            result = result * 10 + (c - '0');
+        }
+        return result;
     }
 
     Result<Node*> Parser::parseAtom() {
         Node* atom;
         switch (m_currentToken.type) {
             case TokenType::FLOAT:
-                atom = new ValueNode(Value::from(readFloat(m_currentToken.value)));
+                atom = new ValueNode(Value::from(util::fastStof(m_currentToken.value)));
                 advance();
                 break;
             case TokenType::INTEGER:

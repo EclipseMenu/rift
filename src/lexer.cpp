@@ -23,26 +23,6 @@ namespace rift {
         return isAlpha(c) || isDigit(c);
     }
 
-    bool Lexer::isEnd() const {
-        return m_index >= m_script.size();
-    }
-
-    char Lexer::peek() const {
-        return isEnd() ? '\0' : m_script[m_index];
-    }
-
-    char Lexer::peekNext() const {
-        return (m_index + 1 >= m_script.size()) ? '\0' : m_script[m_index + 1];
-    }
-
-    char Lexer::advance() {
-        return isEnd() ? '\0' : m_script[m_index++];
-    }
-
-    Token Lexer::createToken(TokenType type, std::string_view value) const {
-        return Token{type, value, static_cast<size_t>(m_startIndex), value.size()};
-    }
-
     Token Lexer::nextToken() {
         m_startIndex = m_index;
 

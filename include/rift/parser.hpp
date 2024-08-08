@@ -57,7 +57,7 @@ namespace rift {
         // Parse functions
 
         Result<Node*> parseBlock();
-        Result<Node*> parseExpression();
+        inline Result<Node*> parseExpression() { return parseTernaryOp(); }
         Result<Node*> parseTernaryOp();
         Result<Node*> parseComparisonExpression();
         Result<Node*> parseArithmeticExpression();

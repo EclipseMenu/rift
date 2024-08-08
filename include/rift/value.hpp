@@ -14,6 +14,8 @@ namespace rift {
                    std::is_same_v<type, char*> ||
                    std::is_same_v<type, const char*>;
         }
+
+        float fastStof(std::string_view str);
     }
 
     /// @brief A value in the AST.
