@@ -12,11 +12,11 @@ namespace rift {
     public:
         /// @brief Construct the identifier node.
         /// @param name The name of the identifier.
-        explicit IdentifierNode(std::string name) : m_name(std::move(name)) {}
+        explicit IdentifierNode(std::string_view name) : m_name(name) {}
 
         /// @brief Get the name of the identifier.
         /// @return The name of the identifier.
-        [[nodiscard]] const std::string& getName() const { return m_name; }
+        [[nodiscard]] std::string_view getName() const { return m_name; }
 
         /// @copydoc Node::getType
         [[nodiscard]] Type getType() const override { return Type::Identifier; }

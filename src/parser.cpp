@@ -9,14 +9,12 @@
 #include <rift/nodes/value.hpp>
 
 #include <iostream>
-#include <sstream>
+#include <format>
 
 namespace rift {
 
     std::string Parser::getErrorMessage(std::string_view message) const {
-        std::stringstream ss;
-        ss << message << " at index " << m_index;
-        return ss.str();
+        return std::format("{} at index {}", message, m_index);
     }
 
     Result<RootNode*> Parser::parse() {
@@ -143,15 +141,19 @@ namespace rift {
     }
 
     Result<Node*> Parser::parseFactor() {
-        if (m_currentToken.type == TokenType::PLUS || m_currentToken.type == TokenType::MINUS) {
-            auto type = m_currentToken.type;
-            advance();
-            auto factor = parseFactor();
-            if (!factor) return factor;
-            auto* unary = new UnaryOpNode(type, factor.getValue());
-            return Result<Node*>::success(unary);
+        switch (m_currentToken.type) {
+            case TokenType::PLUS:
+            case TokenType::MINUS: {
+                auto type = m_currentToken.type;
+                advance();
+                auto factor = parseFactor();
+                if (!factor) return factor;
+                auto *unary = new UnaryOpNode(type, factor.getValue());
+                return Result<Node *>::success(unary);
+            }
+            default:
+                return parsePower();
         }
-        return parsePower();
     }
 
     Result<Node*> Parser::parsePower() {
@@ -204,38 +206,50 @@ namespace rift {
         return Result<Node*>::success(functionCall);
     }
 
+    float readFloat(std::string_view str) {
+        return std::stof(std::string(str));
+    }
+
+    int readInt(std::string_view str) {
+        return std::stoi(std::string(str));
+    }
+
     Result<Node*> Parser::parseAtom() {
-        if (m_currentToken.type == TokenType::FLOAT) {
-            auto *value = new ValueNode(Value::from(std::stof(m_currentToken.value)));
-            advance();
-            return Result<Node*>::success(value);
-        } else if (m_currentToken.type == TokenType::INTEGER) {
-            auto *value = new ValueNode(Value::from(std::stoi(m_currentToken.value)));
-            advance();
-            return Result<Node*>::success(value);
-        } else if (m_currentToken.type == TokenType::STRING) {
-            auto *value = new ValueNode(Value::from(m_currentToken.value.substr(1, m_currentToken.value.size() - 2)));
-            advance();
-            return Result<Node*>::success(value);
-        } else if (m_currentToken.type == TokenType::IDENTIFIER) {
-            auto *identifier = new IdentifierNode(m_currentToken.value);
-            advance();
-            return Result<Node*>::success(identifier);
-        } else if (m_currentToken.type == TokenType::LEFT_PAREN) {
-            advance();
-            auto expression = parseExpression();
-            if (!expression) {
-                return expression;
-            }
-            if (m_currentToken.type != TokenType::RIGHT_PAREN) {
-                delete expression.getValue();
-                return Result<Node*>::error(getErrorMessage("Expected ')'"));
-            }
-            advance();
-            return expression;
-        } else {
-            return Result<Node*>::error(getErrorMessage("Expected number, string, identifier, or '('"));
+        Node* atom;
+        switch (m_currentToken.type) {
+            case TokenType::FLOAT:
+                atom = new ValueNode(Value::from(readFloat(m_currentToken.value)));
+                advance();
+                break;
+            case TokenType::INTEGER:
+                atom = new ValueNode(Value::from(readInt(m_currentToken.value)));
+                advance();
+                break;
+            case TokenType::STRING:
+                atom = new ValueNode(Value::string(m_currentToken.value.substr(1, m_currentToken.value.size() - 2)));
+                advance();
+                break;
+            case TokenType::IDENTIFIER:
+                atom = new IdentifierNode(m_currentToken.value);
+                advance();
+                break;
+            case TokenType::LEFT_PAREN: {
+                advance();
+                auto expression = parseExpression();
+                if (!expression) {
+                    return expression;
+                }
+                if (m_currentToken.type != TokenType::RIGHT_PAREN) {
+                    delete expression.getValue();
+                    return Result<Node*>::error(getErrorMessage("Expected ')'"));
+                }
+                atom = expression.getValue();
+                advance();
+            } break;
+            default:
+                return Result<Node*>::error(getErrorMessage("Expected number, string, identifier, or '('"));
         }
+        return Result<Node*>::success(atom);
     }
 
     Token Parser::advance() {

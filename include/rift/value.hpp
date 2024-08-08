@@ -26,10 +26,10 @@ namespace rift {
             Boolean,
         };
 
-        static Value string(std::string value) {
+        static Value string(std::string_view value) {
             Value result;
             result.m_type = Type::String;
-            result.m_string = std::move(value);
+            result.m_string = value;
             return result;
         }
 

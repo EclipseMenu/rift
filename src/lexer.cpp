@@ -1,5 +1,6 @@
 #include <rift/lexer.hpp>
 #include <utility>
+#include <format>
 
 namespace rift {
 
@@ -27,31 +28,19 @@ namespace rift {
     }
 
     char Lexer::peek() const {
-        if (isEnd()) {
-            return '\0';
-        }
-
-        return m_script[m_index];
+        return isEnd() ? '\0' : m_script[m_index];
     }
 
     char Lexer::peekNext() const {
-        if (m_index + 1 >= m_script.size()) {
-            return '\0';
-        }
-
-        return m_script[m_index + 1];
+        return (m_index + 1 >= m_script.size()) ? '\0' : m_script[m_index + 1];
     }
 
     char Lexer::advance() {
-        if (isEnd()) {
-            return '\0';
-        }
-
-        return m_script[m_index++];
+        return isEnd() ? '\0' : m_script[m_index++];
     }
 
-    Token Lexer::createToken(TokenType type, std::string value) const {
-        return Token{type, std::move(value), static_cast<size_t>(m_startIndex), value.size()};
+    Token Lexer::createToken(TokenType type, std::string_view value) const {
+        return Token{type, value, static_cast<size_t>(m_startIndex), value.size()};
     }
 
     Token Lexer::nextToken() {
@@ -79,11 +68,7 @@ namespace rift {
                 return parseIdentifier();
             } else {
                 switch (c) {
-                    case '\'':
-                    case '"':
-                        return parseString();
-                        break;
-
+                    case '\'': case '"': return parseString();
                     case '(': return createToken(TokenType::LEFT_PAREN, "(");
                     case ')': return createToken(TokenType::RIGHT_PAREN, ")");
                     case '+': return createToken(TokenType::PLUS, "+");
@@ -145,7 +130,7 @@ namespace rift {
                         m_expressionDepth--;
                         return createToken(TokenType::RIGHT_BRACE, "}");
                     default:
-                        return createToken(TokenType::ERROR, "unexpected character '" + std::string(1, c) + "'");
+                        return createToken(TokenType::ERROR, std::format("unexpected character '{}'", c));
                 }
             }
         } else {
@@ -166,7 +151,7 @@ namespace rift {
                     }
                 }
 
-                return createToken(TokenType::Segment, std::string(m_script.substr(m_startIndex, m_index - m_startIndex)));
+                return createToken(TokenType::Segment, m_script.substr(m_startIndex, m_index - m_startIndex));
             }
         }
     }
@@ -186,10 +171,10 @@ namespace rift {
         }
 
         if (hasDot) {
-            return createToken(TokenType::FLOAT, std::string(m_script.substr(start, m_index - start)));
+            return createToken(TokenType::FLOAT, m_script.substr(start, m_index - start));
         }
 
-        return createToken(TokenType::INTEGER, std::string(m_script.substr(start, m_index - start)));
+        return createToken(TokenType::INTEGER, m_script.substr(start, m_index - start));
     }
 
     Token Lexer::parseString() {
@@ -203,7 +188,7 @@ namespace rift {
         }
 
         advance(); // Consume the closing quote.
-        return createToken(TokenType::STRING, std::string(m_script.substr(start, m_index - start)));
+        return createToken(TokenType::STRING, m_script.substr(start, m_index - start));
     }
 
     Token Lexer::parseIdentifier() {
@@ -211,7 +196,7 @@ namespace rift {
 
         while (isAlphaNumeric(peek()) || peek() == '_') advance();
 
-        return createToken(TokenType::IDENTIFIER, std::string(m_script.substr(start, m_index - start)));
+        return createToken(TokenType::IDENTIFIER, m_script.substr(start, m_index - start));
     }
 
 }

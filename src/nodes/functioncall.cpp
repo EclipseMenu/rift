@@ -4,48 +4,43 @@
 
 #include <functional>
 #include <random>
-#include <iomanip>
+#include <format>
 #include <cmath>
 #include <cctype>
+#include <optional>
 
 namespace rift {
 
     namespace builtins {
         template <typename T>
-        struct Result {
-            bool success;
-            T value;
-        };
-
-        template <typename T>
-        Result<T> getArgument(const std::vector<Value>& args, size_t index) {
+        std::optional<T> getArgument(const std::vector<Value>& args, size_t index) {
             if (args.size() <= index) {
-                return {false, T()};
+                return std::nullopt;
             }
 
             if constexpr (std::is_same_v<T, std::string>) {
                 if (!args[index].isString()) {
-                    return {false, T()};
+                    return std::nullopt;
                 }
-                return {true, args[index].toString()};
+                return args[index].toString();
             } else if constexpr (std::is_same_v<T, int>) {
                 if (!args[index].isInteger()) {
-                    return {false, T()};
+                    return std::nullopt;
                 }
-                return {true, args[index].getInteger()};
+                return args[index].getInteger();
             } else if constexpr (std::is_same_v<T, float>) {
                 if (!args[index].isFloat()) {
-                    return {false, T()};
+                    return std::nullopt;
                 }
-                return {true, args[index].getFloat()};
+                return args[index].getFloat();
             } else if constexpr (std::is_same_v<T, bool>) {
                 if (!args[index].isBoolean()) {
-                    return {false, T()};
+                    return std::nullopt;
                 }
-                return {true, args[index].getBoolean()};
-            } else {
-                return {false, T()};
+                return args[index].getBoolean();
             }
+
+            return std::nullopt;
         }
 
         Value len(const std::vector<Value>& args) {
@@ -64,11 +59,11 @@ namespace rift {
             auto start = getArgument<int>(args, 1);
             auto end = getArgument<int>(args, 2);
 
-            if (!value.success || !start.success || !end.success) {
+            if (!value || !start || !end) {
                 return Value::string("<error: substr requires string, integer, integer>");
             }
 
-            return Value::string(value.value.substr(start.value, end.value));
+            return Value::string(value->substr(start.value(), end.value()));
         }
 
         Value toUpper(const std::vector<Value>& args) {
@@ -76,11 +71,11 @@ namespace rift {
                 return Value::string("<error: toUpper requires 1 argument>");
             }
             auto value = getArgument<std::string>(args, 0);
-            if (!value.success) {
+            if (!value) {
                 return Value::string("<error: toUpper requires string>");
             }
 
-            std::string result = value.value;
+            std::string result = value.value();
             for (char& c : result) {
                 c = static_cast<char>(toupper(c));
             }
@@ -93,11 +88,11 @@ namespace rift {
                 return Value::string("<error: toLower requires 1 argument>");
             }
             auto value = getArgument<std::string>(args, 0);
-            if (!value.success) {
+            if (!value) {
                 return Value::string("<error: toLower requires string>");
             }
 
-            std::string result = value.value;
+            std::string result = value.value();
             for (char& c : result) {
                 c = static_cast<char>(tolower(c));
             }
@@ -110,11 +105,11 @@ namespace rift {
                 return Value::string("<error: trim requires 1 argument>");
             }
             auto value = getArgument<std::string>(args, 0);
-            if (!value.success) {
+            if (!value) {
                 return Value::string("<error: trim requires string>");
             }
 
-            std::string result = value.value;
+            std::string result = value.value();
             result.erase(0, result.find_first_not_of(" \t\n\r\f\v"));
             result.erase(result.find_last_not_of(" \t\n\r\f\v") + 1);
 
@@ -129,15 +124,15 @@ namespace rift {
             auto from = getArgument<std::string>(args, 1);
             auto to = getArgument<std::string>(args, 2);
 
-            if (!value.success || !from.success || !to.success) {
+            if (!value || !from || !to) {
                 return Value::string("<error: replace requires string, string, string>");
             }
 
-            std::string result = value.value;
+            std::string result = value.value();
             size_t start_pos = 0;
-            while ((start_pos = result.find(from.value, start_pos)) != std::string::npos) {
-                result.replace(start_pos, from.value.length(), to.value);
-                start_pos += to.value.length();
+            while ((start_pos = result.find(from.value(), start_pos)) != std::string::npos) {
+                result.replace(start_pos, from.value().length(), to.value());
+                start_pos += to.value().length();
             }
 
             return Value::string(result);
@@ -150,13 +145,13 @@ namespace rift {
             auto min = getArgument<int>(args, 0);
             auto max = getArgument<int>(args, 1);
 
-            if (!min.success || !max.success) {
+            if (!min || !max) {
                 return Value::string("<error: random requires integer, integer>");
             }
 
             std::random_device rd;
             std::mt19937 gen(rd());
-            std::uniform_int_distribution<> dis(min.value, max.value);
+            std::uniform_int_distribution<> dis(min.value(), max.value());
             return Value::integer(dis(gen));
         }
 
@@ -166,21 +161,24 @@ namespace rift {
             }
 
             auto value = getArgument<float>(args, 0);
-            if (!value.success) {
+            if (!value) {
                 return Value::string("<error: round requires float>");
             }
 
             if (args.size() == 1) {
-                auto rounded = std::roundf(value.value);
+                auto rounded = std::roundf(value.value());
                 return Value::integer(static_cast<int>(rounded));
             }
 
             auto precision = getArgument<int>(args, 1);
-            if (!precision.success) {
+            if (!precision) {
                 return Value::string("<error: round requires float, integer>");
             }
 
-            auto rounded = static_cast<float>(std::round(value.value * std::pow(10, (float) precision.value)) / std::pow(10, (float) precision.value));
+            auto rounded = static_cast<float>(
+                std::round(value.value() * std::pow(10, (float) precision.value()))
+                    / std::pow(10, (float) precision.value())
+            );
             return Value::floating(rounded);
         }
 
@@ -190,11 +188,11 @@ namespace rift {
             }
 
             auto value = getArgument<float>(args, 0);
-            if (!value.success) {
+            if (!value) {
                 return Value::string("<error: floor requires float>");
             }
 
-            return Value::integer(static_cast<int>(std::floor(value.value)));
+            return Value::integer(static_cast<int>(std::floor(value.value())));
         }
 
         Value ceil(const std::vector<Value>& args) {
@@ -203,11 +201,11 @@ namespace rift {
             }
 
             auto value = getArgument<float>(args, 0);
-            if (!value.success) {
+            if (!value) {
                 return Value::string("<error: ceil requires float>");
             }
 
-            return Value::integer(static_cast<int>(std::ceil(value.value)));
+            return Value::integer(static_cast<int>(std::ceil(value.value())));
         }
 
         Value abs(const std::vector<Value>& args) {
@@ -376,19 +374,101 @@ namespace rift {
 
             auto value = getArgument<float>(args, 0);
             auto precision = getArgument<int>(args, 1);
-            if (!value.success || !precision.success) {
+            if (!value || !precision) {
                 return Value::string("<error: precision requires float, integer>");
             }
 
-            std::ostringstream stream;
-            stream << std::fixed << std::setprecision(precision.value) << value.value;
-            return Value::string(stream.str());
+            return Value::string(std::format("{:.{}f}", value.value(), precision.value()));
+        }
+
+        Value leftPad(const std::vector<Value>& args) {
+            if (args.size() != 2 && args.size() != 3) {
+                return Value::string("<error: leftPad requires 2 or 3 arguments>");
+            }
+
+            auto value = getArgument<std::string>(args, 0);
+            auto length = getArgument<int>(args, 1);
+            if (!value || !length) {
+                return Value::string("<error: leftPad requires string, integer>");
+            }
+
+            char padChar = ' ';
+            if (args.size() == 3) {
+                auto pad = getArgument<std::string>(args, 2);
+                if (!pad || pad.value().size() != 1) {
+                    return Value::string("<error: leftPad requires string, integer, string of length 1>");
+                }
+                padChar = pad.value()[0];
+            }
+
+            if (value.value().size() >= static_cast<size_t>(length.value())) {
+                return Value::string(value.value());
+            }
+
+            return Value::string(std::string(length.value() - value.value().size(), padChar) + value.value());
+        }
+
+        Value rightPad(const std::vector<Value>& args) {
+            if (args.size() != 2 && args.size() != 3) {
+                return Value::string("<error: rightPad requires 2 or 3 arguments>");
+            }
+
+            auto value = getArgument<std::string>(args, 0);
+            auto length = getArgument<int>(args, 1);
+            if (!value || !length) {
+                return Value::string("<error: rightPad requires string, integer>");
+            }
+
+            char padChar = ' ';
+            if (args.size() == 3) {
+                auto pad = getArgument<std::string>(args, 2);
+                if (!pad || pad.value().size() != 1) {
+                    return Value::string("<error: rightPad requires string, integer, string of length 1>");
+                }
+                padChar = pad.value()[0];
+            }
+
+            if (value.value().size() >= static_cast<size_t>(length.value())) {
+                return Value::string(value.value());
+            }
+
+            return Value::string(value.value() + std::string(length.value() - value.value().size(), padChar));
+        }
+
+        Value middlePad(const std::vector<Value>& args) {
+            if (args.size() != 2 && args.size() != 3) {
+                return Value::string("<error: middlePad requires 2 or 3 arguments>");
+            }
+
+            auto value = getArgument<std::string>(args, 0);
+            auto length = getArgument<int>(args, 1);
+            if (!value || !length) {
+                return Value::string("<error: middlePad requires string, integer>");
+            }
+
+            char padChar = ' ';
+            if (args.size() == 3) {
+                auto pad = getArgument<std::string>(args, 2);
+                if (!pad || pad.value().size() != 1) {
+                    return Value::string("<error: middlePad requires string, integer, string of length 1>");
+                }
+                padChar = pad.value()[0];
+            }
+
+            if (value.value().size() >= static_cast<size_t>(length.value())) {
+                return Value::string(value.value());
+            }
+
+            auto padLength = static_cast<size_t>(length.value()) - value.value().size();
+            auto leftPadLength = padLength / 2;
+            auto rightPadLength = padLength - leftPadLength;
+
+            return Value::string(std::string(leftPadLength, padChar) + value.value() + std::string(rightPadLength, padChar));
         }
     }
 
-
-    std::function<Value(const std::vector<Value>&)> findFunction(const std::string& name) {
-        static const std::unordered_map<std::string, std::function<Value(const std::vector<Value>&)>> functions = {
+    std::function<Value(const std::vector<Value>&)> findFunction(std::string_view name) {
+        static const std::unordered_map<std::string_view, std::function<Value(const std::vector<Value>&)>> functions = {
             {"len", builtins::len},
             {"substr", builtins::substr},
             {"toUpper", builtins::toUpper},
@@ -410,6 +490,9 @@ namespace rift {
             {"cos", builtins::cos},
             {"tan", builtins::tan},
             {"precision", builtins::precision},
+            {"leftPad", builtins::leftPad},
+            {"rightPad", builtins::rightPad},
+            {"middlePad", builtins::middlePad},
         };
 
         auto it = functions.find(name);
@@ -431,7 +514,7 @@ namespace rift {
         auto funcName = reinterpret_cast<const IdentifierNode*>(m_name)->getName();
         auto function = findFunction(funcName);
         if (!function) {
-            return Value::string("<error: unknown function '" + funcName + "'>");
+            return Value::string(std::format("<error: unknown function '{}'>", funcName));
         }
 
         std::vector<Value> arguments;

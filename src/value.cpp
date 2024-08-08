@@ -1,7 +1,7 @@
 #include <rift/value.hpp>
 #include <cmath>
-#include <iomanip>
 #include <sstream>
+#include <format>
 
 namespace rift {
 
@@ -12,9 +12,7 @@ namespace rift {
             case Type::Integer:
                 return std::to_string(m_integer);
             case Type::Float: {
-                std::stringstream ss;
-                ss << std::fixed << std::setprecision(2) << m_float;
-                return ss.str();
+                return std::format("{:.2f}", m_float);
             }
             case Type::Boolean:
                 return m_boolean ? "true" : "false";

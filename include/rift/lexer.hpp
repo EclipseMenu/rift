@@ -16,17 +16,17 @@ namespace rift {
         Token nextToken();
 
         /// @brief Check whether index is at the end of the script.
-        [[nodiscard]] bool isEnd() const;
+        [[nodiscard]] inline bool isEnd() const;
 
     private:
         /// @brief Get the current character.
-        [[nodiscard]] char peek() const;
+        [[nodiscard]] inline char peek() const;
 
         /// @brief Get the next character.
-        [[nodiscard]] char peekNext() const;
+        [[nodiscard]] inline char peekNext() const;
 
         /// @brief Advance the index and return the current character.
-        char advance();
+        inline char advance();
 
         /// @brief Parse a number.
         Token parseNumber();
@@ -38,7 +38,7 @@ namespace rift {
         Token parseIdentifier();
 
         /// @brief Create a token with current index.
-        [[nodiscard]] Token createToken(TokenType type, std::string value) const;
+        [[nodiscard]] Token createToken(TokenType type, std::string_view value) const;
 
     private:
         std::string_view m_script;

@@ -52,7 +52,7 @@ namespace rift {
     private:
         /// @brief Advance to the next token.
         /// @return Previous token.
-        Token advance();
+        inline Token advance();
 
         // Parse functions
 

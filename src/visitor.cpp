@@ -43,7 +43,7 @@ namespace rift {
     }
 
     void Visitor::visit(IdentifierNode* node) {
-        auto it = m_variables->find(node->getName());
+        auto it = m_variables->find(std::string(node->getName()));
         if (it != m_variables->end()) {
             write(it->second.toString());
         } else {

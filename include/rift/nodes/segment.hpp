@@ -12,11 +12,11 @@ namespace rift {
     public:
         /// @brief Construct the segment node.
         /// @param text The text of the segment.
-        explicit SegmentNode(std::string  text) : m_text(std::move(text)) {}
+        explicit SegmentNode(std::string_view text) : m_text(text) {}
 
         /// @brief Get the text of the segment.
         /// @return The text of the segment.
-        [[nodiscard]] const std::string& getText() const { return m_text; }
+        [[nodiscard]] std::string_view getText() const { return m_text; }
 
         /// @copydoc Node::getType
         [[nodiscard]] Type getType() const override { return Type::Segment; }
