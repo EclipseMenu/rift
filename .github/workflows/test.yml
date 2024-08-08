@@ -17,6 +17,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: sudo apt-get install -y ninja-build
+
       - name: Configure CMake project
         run: |
           mkdir build
