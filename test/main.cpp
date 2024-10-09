@@ -67,6 +67,7 @@ int main() {
         RIFT_TEST_CASE("to lower: {toLower('HELLO, WORLD!')}", "to lower: hello, world!");
         RIFT_TEST_CASE("Trim whitespace: {trim('  Hello, World!  ')}", "Trim whitespace: Hello, World!");
         RIFT_TEST_CASE("Replacing: {replace('Hello, World!', 'World', 'Universe')}", "Replacing: Hello, Universe!");
+        RIFT_TEST_CASE("{'escaped \\' quote'} {'single \" quote'} {\"double ' quote \"}", "escaped ' quote single \" quote double ' quote ");
     }
 
     // Show the results
@@ -77,4 +78,3 @@ int main() {
 
     return failed == 0 ? 0 : 1;
 }
-

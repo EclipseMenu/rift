@@ -158,20 +158,42 @@ namespace rift {
     }
 
     Token Lexer::parseString(char quote) {
+        std::string buffer = std::string(m_script.substr(m_index - 1, 1));
         size_t start = m_index - 1;
-        bool isSingleQuote = quote == '\'';
         bool isEscape = false;
-        while (!isEnd() && (peek() != (isSingleQuote ? '\'' : '"') || isEscape)) {
-            advance();
+        while (!isEnd() && (peek() != quote || isEscape)) {
             isEscape = !isEscape && peek() == '\\';
+            if (!isEscape) buffer.push_back(peek());
+            else {
+                advance();
+                if (isEnd()) {
+                    return createToken(TokenType::ERROR, "unterminated string");
+                }
+                switch (peek()) {
+                    case 'n': buffer.push_back('\n'); break;
+                    case 'r': buffer.push_back('\r'); break;
+                    case 't': buffer.push_back('\t'); break;
+                    case 'v': buffer.push_back('\v'); break;
+                    case 'b': buffer.push_back('\b'); break;
+                    case 'f': buffer.push_back('\f'); break;
+                    case 'a': buffer.push_back('\a'); break;
+                    case '\\': buffer.push_back('\\'); break;
+                    case '\'': buffer.push_back('\''); break;
+                    case '"': buffer.push_back('"'); break;
+                    default: buffer.push_back(peek()); break;
+                }
+            }
+            advance();
         }
 
         if (isEnd()) {
             return createToken(TokenType::ERROR, "unterminated string");
         }
 
+        buffer.push_back(peek());
+
         advance(); // Consume the closing quote.
-        return createToken(TokenType::STRING, m_script.substr(start, m_index - start));
+        return createToken(TokenType::STRING, buffer);
     }
 
     Token Lexer::parseIdentifier() {
