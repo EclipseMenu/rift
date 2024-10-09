@@ -40,7 +40,7 @@ namespace rift {
         Token parseNumber();
 
         /// @brief Parse a string.
-        Token parseString();
+        Token parseString(char quote);
 
         /// @brief Parse an identifier.
         Token parseIdentifier();

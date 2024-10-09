@@ -48,7 +48,7 @@ namespace rift {
                 return parseIdentifier();
             } else {
                 switch (c) {
-                    case '\'': case '"': return parseString();
+                    case '\'': case '"': return parseString(c);
                     case '(': return createToken(TokenType::LEFT_PAREN, "(");
                     case ')': return createToken(TokenType::RIGHT_PAREN, ")");
                     case '+': return createToken(TokenType::PLUS, "+");
@@ -157,10 +157,13 @@ namespace rift {
         return createToken(TokenType::INTEGER, m_script.substr(start, m_index - start));
     }
 
-    Token Lexer::parseString() {
+    Token Lexer::parseString(char quote) {
         size_t start = m_index - 1;
-        while (!isEnd() && peek() != '\'' && peek() != '"') {
+        bool isSingleQuote = quote == '\'';
+        bool isEscape = false;
+        while (!isEnd() && (peek() != (isSingleQuote ? '\'' : '"') || isEscape)) {
             advance();
+            isEscape = !isEscape && peek() == '\\';
         }
 
         if (isEnd()) {
