@@ -3,7 +3,7 @@ project(rift)
 
 # std::format is not available in GNU++20?
 include(cmake/CPM.cmake)
-CPMAddPackage("gh:fmtlib/fmt#11.0.2")
+CPMAddPackage("gh:fmtlib/fmt#10.2.1")
 
 set(CMAKE_CXX_STANDARD 20)
 
