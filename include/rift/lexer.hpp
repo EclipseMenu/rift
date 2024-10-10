@@ -39,6 +39,13 @@ namespace rift {
         /// @brief Parse a number.
         Token parseNumber();
 
+        /// @brief Read a string until a character. Handles escape sequences.
+        /// @param output The output string.
+        /// @param readUntil The character to read until.
+        /// @param requireEnd Whether to require the end character.
+        /// @return Whether the string was read successfully.
+        [[nodiscard]] bool readString(std::string& output, char readUntil, bool requireEnd = true);
+
         /// @brief Parse a string.
         Token parseString(char quote);
 
@@ -47,7 +54,7 @@ namespace rift {
 
         /// @brief Create a token with current index.
         [[nodiscard]] inline Token createToken(TokenType type, std::string_view value) const {
-            return Token{type, value, static_cast<size_t>(m_startIndex), value.size()};
+            return Token{type, std::string(value), static_cast<size_t>(m_startIndex), static_cast<size_t>(m_index)};
         }
 
     private:

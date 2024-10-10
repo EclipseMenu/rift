@@ -22,11 +22,18 @@ namespace rift {
     class Value {
     public:
         enum class Type {
+            Null,
             String,
             Integer,
             Float,
             Boolean,
         };
+
+        static Value null() {
+            Value result;
+            result.m_type = Type::Null;
+            return result;
+        }
 
         static Value string(std::string_view value) {
             Value result;
@@ -69,6 +76,7 @@ namespace rift {
             } else {
                 static_assert(!sizeof(T*), "Unsupported type 'T' for Value::from");
             }
+            return null();
         }
 
         template <size_t N>

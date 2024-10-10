@@ -18,7 +18,7 @@ namespace rift {
 
         // Operators
         PLUS, MINUS, STAR, SLASH, PERCENT, CARET,
-        QUESTION, COLON,
+        QUESTION, COLON, NULL_COALESCE, ASSIGN,
         LESS, GREATER, LESS_EQUAL, GREATER_EQUAL, EQUAL_EQUAL, NOT_EQUAL,
 
         // Logical operators
@@ -27,7 +27,7 @@ namespace rift {
         // Special tokens
         DOT, COMMA,
 
-        // Special tokens
+        // Internal tokens
         END, ERROR
     };
 
@@ -50,12 +50,12 @@ namespace rift {
 
     struct Token {
         TokenType type;
-        std::string_view value;
+        std::string value;
         size_t startIndex;
         size_t endIndex;
 
-        Token(TokenType type, std::string_view value, size_t startIndex, size_t endIndex)
-            : type(type), value(value), startIndex(startIndex), endIndex(endIndex) {}
+        Token(TokenType type, std::string value, size_t startIndex, size_t endIndex)
+            : type(type), value(std::move(value)), startIndex(startIndex), endIndex(endIndex) {}
     };
 
 }
