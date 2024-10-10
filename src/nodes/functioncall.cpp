@@ -465,6 +465,28 @@ namespace rift {
 
             return Value::string(std::string(leftPadLength, padChar) + value.value() + std::string(rightPadLength, padChar));
         }
+
+        Value ordinal(const std::vector<Value>& args) {
+            if (args.size() != 1) {
+                return Value::string("<error: ordinal requires 1 argument>");
+            }
+
+            auto value = getArgument<int>(args, 0);
+            if (!value) {
+                return Value::string("<error: ordinal requires integer>");
+            }
+
+            int n = value.value();
+            if (n > 3 && n < 21) {
+                return Value::string("th");
+            }
+            switch (n % 10) {
+                case 1: return Value::string("st");
+                case 2: return Value::string("nd");
+                case 3: return Value::string("rd");
+                default: return Value::string("th");
+            }
+        }
     }
 
     std::function<Value(const std::vector<Value>&)> findFunction(std::string_view name) {
@@ -493,6 +515,7 @@ namespace rift {
             {"leftPad", builtins::leftPad},
             {"rightPad", builtins::rightPad},
             {"middlePad", builtins::middlePad},
+            {"ordinal", builtins::ordinal},
         };
 
         auto it = functions.find(name);
