@@ -67,7 +67,16 @@ int main() {
         RIFT_TEST_CASE("to lower: {toLower('HELLO, WORLD!')}", "to lower: hello, world!");
         RIFT_TEST_CASE("Trim whitespace: {trim('  Hello, World!  ')}", "Trim whitespace: Hello, World!");
         RIFT_TEST_CASE("Replacing: {replace('Hello, World!', 'World', 'Universe')}", "Replacing: Hello, Universe!");
-        RIFT_TEST_CASE("{'escaped \\' quote'} {'single \" quote'} {\"double ' quote \"}", "escaped ' quote single \" quote double ' quote ");
+        RIFT_TEST_CASE("{monthName} {day}{ day > 3 || day < 21 ? 'th' : day % 10 == 1 ? 'st' : day % 10 == 2 ? 'nd' : day % 10 == 3 ? 'rd' : 'th' }, {year}",
+             "October 10th, 2024",
+             { VALUE("monthName", "October"), VALUE("day", 10), VALUE("year", 2024) });
+        RIFT_TEST_CASE("{monthName} {day}{ordinal(day)}, {year}", "October 10th, 2024",
+             { VALUE("monthName", "October"), VALUE("day", 10), VALUE("year", 2024) });
+        RIFT_TEST_CASE(R"({'escaped \' quote'} {'single " quote'} {"double ' quote "})", "escaped ' quote single \" quote double ' quote ");
+        RIFT_TEST_CASE("Hello!\\nNewline:{'\\n'}123", "Hello!\nNewline:\n123");
+        RIFT_TEST_CASE("{null ? 'true' : 'false'}", "false");
+        RIFT_TEST_CASE("{(true || null) == true}", "true");
+        RIFT_TEST_CASE("{true ?? 'cool'}{false ?? 'not cool'}", "cool");
     }
 
     // Show the results
