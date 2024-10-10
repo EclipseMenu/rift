@@ -34,6 +34,8 @@ namespace rift {
                 return fmt::format("{:.2f}", m_float);
             case Type::Boolean:
                 return m_boolean ? "true" : "false";
+            case Type::Null:
+                return "null";
         }
 
         return "<invalid value>";
@@ -49,12 +51,19 @@ namespace rift {
                 return m_float;
             case Type::Boolean:
                 return m_boolean ? 1.0f : 0.0f;
+            case Type::Null:
+                return 0.0f;
         }
 
         return 0.0f;
     }
 
     Value Value::operator+(const Value& other) const {
+        // If either value is null, return null.
+        if (m_type == Type::Null || other.m_type == Type::Null) {
+            return Value::null();
+        }
+
         // If either value is a string, concatenate them.
         if (m_type == Type::String || other.m_type == Type::String) {
             return Value::string(toString() + other.toString());
@@ -83,6 +92,11 @@ namespace rift {
     }
 
     Value Value::operator-(const Value& other) const {
+        // If either value is null, return null.
+        if (m_type == Type::Null || other.m_type == Type::Null) {
+            return Value::null();
+        }
+
         // If either value is a string, we can't subtract them.
         if (m_type == Type::String || other.m_type == Type::String) {
             return Value::string("<error: subtraction of strings>");
@@ -111,6 +125,11 @@ namespace rift {
     }
 
     Value Value::operator*(const Value& other) const {
+        // If either value is null, return null.
+        if (m_type == Type::Null || other.m_type == Type::Null) {
+            return Value::null();
+        }
+
         // If first value is a string, repeat it n times where n is the second value.
         if (m_type == Type::String && (other.m_type == Type::Integer || other.m_type == Type::Float)) {
             std::string result;
@@ -153,6 +172,11 @@ namespace rift {
     }
 
     Value Value::operator/(const Value& other) const {
+        // If either value is null, return null.
+        if (m_type == Type::Null || other.m_type == Type::Null) {
+            return Value::null();
+        }
+
         // If either value is a string, we can't divide them.
         if (m_type == Type::String || other.m_type == Type::String) {
             return Value::string("<error: division of strings>");
@@ -200,6 +224,11 @@ namespace rift {
     }
 
     Value Value::operator%(const Value& other) const {
+        // If either value is null, return null.
+        if (m_type == Type::Null || other.m_type == Type::Null) {
+            return Value::null();
+        }
+
         // If either value is a string, we can't divide them.
         if (m_type == Type::String || other.m_type == Type::String) {
             return Value::string("<error: modulo of strings>");
@@ -244,6 +273,11 @@ namespace rift {
     }
 
     Value Value::operator^(const rift::Value &other) const {
+        // If either value is null, return null.
+        if (m_type == Type::Null || other.m_type == Type::Null) {
+            return Value::null();
+        }
+
         // If either value is a string, we can't raise them to a power.
         if (m_type == Type::String || other.m_type == Type::String) {
             return Value::string("<error: exponentiation of strings>");
@@ -272,6 +306,16 @@ namespace rift {
     }
 
     Value Value::operator==(const Value& other) const {
+        // If both values are null, return true.
+        if (m_type == Type::Null && other.m_type == Type::Null) {
+            return Value::boolean(true);
+        }
+
+        // If either value is null, return false
+        if (m_type == Type::Null || other.m_type == Type::Null) {
+            return Value::boolean(false);
+        }
+
         // If either value is a string, compare them.
         if (m_type == Type::String || other.m_type == Type::String) {
             return Value::boolean(toString() == other.toString());
@@ -300,6 +344,16 @@ namespace rift {
     }
 
     Value Value::operator!=(const Value& other) const {
+        // If both values are null, return false.
+        if (m_type == Type::Null && other.m_type == Type::Null) {
+            return Value::boolean(false);
+        }
+
+        // If either value is null, return true.
+        if (m_type == Type::Null || other.m_type == Type::Null) {
+            return Value::boolean(true);
+        }
+
         // If either value is a string, compare them.
         if (m_type == Type::String || other.m_type == Type::String) {
             return Value::boolean(toString() != other.toString());
@@ -328,6 +382,11 @@ namespace rift {
     }
 
     Value Value::operator<(const Value& other) const {
+        // If either value is null, return false.
+        if (m_type == Type::Null || other.m_type == Type::Null) {
+            return Value::boolean(false);
+        }
+
         // If either value is a string, compare them.
         if (m_type == Type::String || other.m_type == Type::String) {
             return Value::boolean(toString() < other.toString());
@@ -356,6 +415,11 @@ namespace rift {
     }
 
     Value Value::operator>(const Value& other) const {
+        // If either value is null, return false.
+        if (m_type == Type::Null || other.m_type == Type::Null) {
+            return Value::boolean(false);
+        }
+
         // If either value is a string, compare them.
         if (m_type == Type::String || other.m_type == Type::String) {
             return Value::boolean(toString() > other.toString());
@@ -384,6 +448,11 @@ namespace rift {
     }
 
     Value Value::operator<=(const Value& other) const {
+        // If either value is null, return false.
+        if (m_type == Type::Null || other.m_type == Type::Null) {
+            return Value::boolean(false);
+        }
+
         // If either value is a string, compare them.
         if (m_type == Type::String || other.m_type == Type::String) {
             return Value::boolean(toString() <= other.toString());
@@ -412,6 +481,11 @@ namespace rift {
     }
 
     Value Value::operator>=(const Value& other) const {
+        // If either value is null, return false.
+        if (m_type == Type::Null || other.m_type == Type::Null) {
+            return Value::boolean(false);
+        }
+
         // If either value is a string, compare them.
         if (m_type == Type::String || other.m_type == Type::String) {
             return Value::boolean(toString() >= other.toString());
@@ -440,6 +514,11 @@ namespace rift {
     }
 
     Value Value::operator&&(const Value& other) const {
+        // If either value is null, return false.
+        if (m_type == Type::Null || other.m_type == Type::Null) {
+            return Value::boolean(false);
+        }
+
         // If either value is a string, we can't perform logical AND on them.
         if (m_type == Type::String || other.m_type == Type::String) {
             return Value::boolean(false);
@@ -455,6 +534,11 @@ namespace rift {
     }
 
     Value Value::operator||(const Value& other) const {
+        // If both values are null, return false.
+        if (m_type == Type::Null && other.m_type == Type::Null) {
+            return Value::boolean(false);
+        }
+
         // If either value is a string, we can't perform logical OR on them.
         if (m_type == Type::String || other.m_type == Type::String) {
             return Value::boolean(false);
@@ -465,11 +549,24 @@ namespace rift {
             return Value::boolean(m_boolean || other.m_boolean);
         }
 
+        // If one of the values is null, convert the other to a boolean and check if it's true.
+        if (m_type == Type::Null) {
+            return Value::boolean(other.m_integer);
+        }
+        if (other.m_type == Type::Null) {
+            return Value::boolean(m_integer);
+        }
+
         // If both values are numbers, convert them to booleans and perform logical OR on them.
         return Value::boolean(m_integer || other.m_integer);
     }
 
     Value Value::operator!() const {
+        // If the value is null, return true.
+        if (m_type == Type::Null) {
+            return Value::boolean(true);
+        }
+
         // If the value is a string, we can't perform logical NOT on it.
         if (m_type == Type::String) {
             return Value::boolean(false);
@@ -485,6 +582,11 @@ namespace rift {
     }
 
     Value Value::operator-() const {
+        // If the value is null, return null.
+        if (m_type == Type::Null) {
+            return Value::null();
+        }
+
         // If the value is a string, we can't negate it.
         if (m_type == Type::String) {
             return Value::floating(-toFloat());

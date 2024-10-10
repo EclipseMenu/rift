@@ -18,6 +18,15 @@ namespace rift {
         TernaryNode(Node* condition, Node* trueBranch, Node* falseBranch)
             : m_condition(condition), m_trueBranch(trueBranch), m_falseBranch(falseBranch) {}
 
+        /// @brief Construct the ternary operation node with only the true branch.
+        /// @param condition The condition of the operation.
+        /// @param trueBranch The true branch of the operation.
+        /// @return The ternary operation node.
+        TernaryNode(Node* condition, Node* trueBranch)
+            : m_condition(condition), m_trueBranch(trueBranch), m_falseBranch(nullptr) {
+            m_onlyTrue = true;
+        }
+
         ~TernaryNode() override {
             delete m_condition;
             delete m_trueBranch;
@@ -50,9 +59,12 @@ namespace rift {
         }
 
     private:
+        Value pickBranch(bool result, Visitor* visitor) const;
+
         Node* m_condition;
         Node* m_trueBranch;
         Node* m_falseBranch;
+        bool m_onlyTrue = false;
     };
 
 }

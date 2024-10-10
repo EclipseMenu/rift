@@ -19,9 +19,8 @@ namespace rift {
         auto it = m_variables->find(name);
         if (it != m_variables->end()) {
             return it->second;
-        } else {
-            return Value::string("null");
         }
+        return Value::null();
     }
 
     const std::string& Visitor::getOutput() const {

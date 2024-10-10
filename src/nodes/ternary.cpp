@@ -9,27 +9,28 @@ namespace rift {
 
     Value TernaryNode::getValue(Visitor* visitor) const {
         auto condition = m_condition->getValue(visitor);
-        if (condition.getType() == Value::Type::Boolean) {
-            if (condition.getBoolean()) {
-                return m_trueBranch->getValue(visitor);
-            } else {
-                return m_falseBranch->getValue(visitor);
-            }
-        } else if (condition.getType() == Value::Type::Integer) {
-            if (condition.getInteger()) {
-                return m_trueBranch->getValue(visitor);
-            } else {
-                return m_falseBranch->getValue(visitor);
-            }
-        } else if (condition.getType() == Value::Type::Float) {
-            if (condition.getFloat() != 0.0f) {
-                return m_trueBranch->getValue(visitor);
-            } else {
-                return m_falseBranch->getValue(visitor);
-            }
-        } else {
-            return Value::string("<invalid ternary condition>");
+        switch (condition.getType()) {
+            case Value::Type::Boolean:
+                return pickBranch(condition.getBoolean(), visitor);
+            case Value::Type::Integer:
+                return pickBranch(condition.getInteger(), visitor);
+            case Value::Type::Float:
+                return pickBranch(condition.getFloat() != 0.0f, visitor);
+            case Value::Type::Null:
+                return pickBranch(false, visitor);
+            default:
+                return Value::string("<invalid ternary condition>");
         }
     }
 
+    Value TernaryNode::pickBranch(bool result, Visitor* visitor) const {
+        if (m_onlyTrue) {
+            // Return an empty string if the condition is false. (Makes the syntax more clean.)
+            return result ? m_trueBranch->getValue(visitor) : Value::string("");
+        }
+        if (result) {
+            return m_trueBranch->getValue(visitor);
+        }
+        return m_falseBranch->getValue(visitor);
+    }
 }

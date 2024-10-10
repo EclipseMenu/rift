@@ -44,16 +44,17 @@ namespace rift {
             }
             advance();
             return expressionRes;
-        } else {
-            auto* segment = new SegmentNode(m_currentToken.value);
-            advance();
-            return Result<Node*>::success(segment);
         }
+
+        auto* segment = new SegmentNode(m_currentToken.value);
+        advance();
+        return Result<Node*>::success(segment);
     }
 
     Result<Node*> Parser::parseTernaryOp() {
-        auto condition = parseComparisonExpression();
-        if (m_currentToken.type != TokenType::QUESTION || !condition) {
+        auto condition = parseBooleanMath();
+        auto ternaryMode = m_currentToken.type;
+        if ((ternaryMode != TokenType::QUESTION && ternaryMode != TokenType::NULL_COALESCE) || !condition) {
             return condition;
         }
         advance();
@@ -62,6 +63,12 @@ namespace rift {
             delete condition.getValue();
             return trueExpression;
         }
+
+        if (ternaryMode == TokenType::NULL_COALESCE) {
+            auto* ternary = new TernaryNode(condition.getValue(), trueExpression.getValue());
+            return Result<Node*>::success(ternary);
+        }
+
         if (m_currentToken.type != TokenType::COLON) {
             return Result<Node*>::error(getErrorMessage("Expected ':'"));
         }
@@ -74,6 +81,25 @@ namespace rift {
         }
         auto* ternary = new TernaryNode(condition.getValue(), trueExpression.getValue(), falseExpression.getValue());
         return Result<Node*>::success(ternary);
+    }
+
+    Result<Node*> Parser::parseBooleanMath() {
+        auto res = parseComparisonExpression();
+        if (!res) {
+            return res;
+        }
+        auto* expression = res.getValue();
+        while (m_currentToken.type == TokenType::AND || m_currentToken.type == TokenType::OR) {
+            auto type = m_currentToken.type;
+            advance();
+            auto right = parseComparisonExpression();
+            if (!right) {
+                delete expression;
+                return right;
+            }
+            expression = new BinaryOpNode(expression, right.getValue(), type);
+        }
+        return Result<Node*>::success(expression);
     }
 
     Result<Node*> Parser::parseComparisonExpression() {
@@ -218,7 +244,7 @@ namespace rift {
                 advance();
                 break;
             case TokenType::STRING:
-                atom = new ValueNode(Value::string(m_currentToken.value.substr(1, m_currentToken.value.size() - 2)));
+                atom = new ValueNode(Value::string(m_currentToken.value));
                 advance();
                 break;
             case TokenType::IDENTIFIER:

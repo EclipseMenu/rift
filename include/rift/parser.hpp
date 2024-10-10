@@ -17,6 +17,9 @@ namespace rift {
      *                       : comparison_expression
      *
      * ternary_op            : comparison_expression '?' expression ':' expression
+     *                       : comparison_expression '??' expression
+     *
+     * boolean_math          : comparison_expression ('&&' | '||' comparison_expression)*
      *
      * comparison_expression : '!' comparison_expression
      *                       : arithmetic_expression ('==' | '!=' | '<' | '<=' | '>' | '>=' arithmetic_expression)*
@@ -59,6 +62,7 @@ namespace rift {
         Result<Node*> parseBlock();
         inline Result<Node*> parseExpression() { return parseTernaryOp(); }
         Result<Node*> parseTernaryOp();
+        Result<Node*> parseBooleanMath();
         Result<Node*> parseComparisonExpression();
         Result<Node*> parseArithmeticExpression();
         Result<Node*> parseTerm();
