@@ -45,6 +45,9 @@ namespace rift {
                 case Value::Type::Boolean:
                     out << "Boolean(" << m_value.getBoolean() << ')';
                     break;
+                case Value::Type::Null:
+                    out << "Null()";
+                    break;
             }
             out << ')';
             return out;
