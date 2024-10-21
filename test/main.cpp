@@ -77,6 +77,7 @@ int main() {
         RIFT_TEST_CASE("{null ? 'true' : 'false'}", "false");
         RIFT_TEST_CASE("{(true || null) == true}", "true");
         RIFT_TEST_CASE("{true ?? 'cool'}{false ?? 'not cool'}", "cool");
+        RIFT_TEST_CASE("{duration(123.456)}", "2:03.456");
     }
 
     // Show the results

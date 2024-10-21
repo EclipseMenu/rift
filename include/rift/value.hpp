@@ -196,6 +196,7 @@ namespace rift {
         [[nodiscard]] bool isInteger() const { return m_type == Type::Integer; }
         [[nodiscard]] bool isFloat() const { return m_type == Type::Float; }
         [[nodiscard]] bool isBoolean() const { return m_type == Type::Boolean; }
+        [[nodiscard]] bool isNull() const { return m_type == Type::Null; }
 
     private:
         Type m_type = Type::String;
