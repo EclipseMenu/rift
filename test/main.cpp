@@ -41,7 +41,18 @@ static void RIFT_TEST_CASE(const std::string& input, const std::string& expected
     }
 }
 
+#include <rift/config.hpp>
+rift::Value myCustomFunc(std::span<rift::Value> args) {
+    auto arg = rift::getArgument<std::string>(args, 0);
+    if (!arg) {
+        return rift::Value::from("Invalid argument");
+    }
+    return rift::Value::from("Hello, " + *arg + "!");
+}
+
 int main() {
+    rift::config::addRuntimeFunction("myCustomFunc", myCustomFunc);
+
     std::cout << "Running tests..." << std::endl;
     {
         RIFT_TEST_CASE("Hello, {name}!", "Hello, World!", { VALUE("name", "World") });
@@ -78,6 +89,8 @@ int main() {
         RIFT_TEST_CASE("{(true || null) == true}", "true");
         RIFT_TEST_CASE("{true ?? 'cool'}{false ?? 'not cool'}", "cool");
         RIFT_TEST_CASE("{duration(123.456)}", "2:03.456");
+
+        RIFT_TEST_CASE("{myCustomFunc('World')}", "Hello, World!");
     }
 
     // Show the results

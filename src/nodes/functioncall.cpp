@@ -9,47 +9,11 @@
 #include <cctype>
 #include <optional>
 #include <span>
+#include <rift/config.hpp>
 
 namespace rift {
 
     namespace builtins {
-        template <typename T>
-        std::optional<T> getArgument(std::span<Value> args, size_t index) {
-            if (args.size() <= index) {
-                return std::nullopt;
-            }
-
-            if constexpr (std::is_same_v<T, std::string>) {
-                if (!args[index].isString()) {
-                    return std::nullopt;
-                }
-                return args[index].toString();
-            } else if constexpr (std::is_same_v<T, int>) {
-                if (args[index].isInteger()) {
-                    return args[index].getInteger();
-                }
-                if (args[index].isFloat()) {
-                    return static_cast<int>(args[index].getFloat());
-                }
-                return std::nullopt;
-            } else if constexpr (std::is_same_v<T, float>) {
-                if (args[index].isFloat()) {
-                    return args[index].getFloat();
-                }
-                if (args[index].isInteger()) {
-                    return static_cast<float>(args[index].getInteger());
-                }
-                return std::nullopt;
-            } else if constexpr (std::is_same_v<T, bool>) {
-                if (!args[index].isBoolean()) {
-                    return std::nullopt;
-                }
-                return args[index].getBoolean();
-            }
-
-            return std::nullopt;
-        }
-
         Value len(std::span<Value> args) {
             if (args.size() != 1) {
                 return Value::string("<error: len requires 1 argument>");
@@ -520,43 +484,47 @@ namespace rift {
     }
 
     std::function<Value(std::span<Value>)> findFunction(std::string_view name) {
-        static const std::unordered_map<std::string_view, std::function<Value(std::span<Value>)>> functions = {
-            {"len", builtins::len},
-            {"substr", builtins::substr},
-            {"toUpper", builtins::toUpper},
-            {"toLower", builtins::toLower},
-            {"trim", builtins::trim},
-            {"replace", builtins::replace},
-            {"random", builtins::random},
-            {"round", builtins::round},
-            {"floor", builtins::floor},
-            {"ceil", builtins::ceil},
-            {"abs", builtins::abs},
-            {"min", builtins::min},
-            {"max", builtins::max},
-            {"sum", builtins::sum},
-            {"avg", builtins::avg},
-            {"sqrt", builtins::sqrt},
-            {"pow", builtins::pow},
-            {"sin", builtins::sin},
-            {"cos", builtins::cos},
-            {"tan", builtins::tan},
-            {"precision", builtins::precision},
-            {"leftPad", builtins::leftPad},
-            {"rightPad", builtins::rightPad},
-            {"middlePad", builtins::middlePad},
-            {"ordinal", builtins::ordinal},
-            {"duration", builtins::duration},
+        static bool initialized = false;
+        if (!initialized) {
+            // Initialize the function map
+            initialized = true;
+            config::addRuntimeFunction("len", builtins::len);
+            config::addRuntimeFunction("substr", builtins::substr);
+            config::addRuntimeFunction("toUpper", builtins::toUpper);
+            config::addRuntimeFunction("toLower", builtins::toLower);
+            config::addRuntimeFunction("trim", builtins::trim);
+            config::addRuntimeFunction("replace", builtins::replace);
+            config::addRuntimeFunction("random", builtins::random);
+            config::addRuntimeFunction("round", builtins::round);
+            config::addRuntimeFunction("floor", builtins::floor);
+            config::addRuntimeFunction("ceil", builtins::ceil);
+            config::addRuntimeFunction("abs", builtins::abs);
+            config::addRuntimeFunction("min", builtins::min);
+            config::addRuntimeFunction("max", builtins::max);
+            config::addRuntimeFunction("sum", builtins::sum);
+            config::addRuntimeFunction("avg", builtins::avg);
+            config::addRuntimeFunction("sqrt", builtins::sqrt);
+            config::addRuntimeFunction("pow", builtins::pow);
+            config::addRuntimeFunction("sin", builtins::sin);
+            config::addRuntimeFunction("cos", builtins::cos);
+            config::addRuntimeFunction("tan", builtins::tan);
+            config::addRuntimeFunction("precision", builtins::precision);
+            config::addRuntimeFunction("leftPad", builtins::leftPad);
+            config::addRuntimeFunction("rightPad", builtins::rightPad);
+            config::addRuntimeFunction("middlePad", builtins::middlePad);
+            config::addRuntimeFunction("ordinal", builtins::ordinal);
+            config::addRuntimeFunction("duration", builtins::duration);
             // Aliases
-            {"lpad", builtins::leftPad},
-            {"rpad", builtins::rightPad},
-            {"mpad", builtins::middlePad},
-            {"ord", builtins::ordinal},
-            {"prec", builtins::precision},
-            {"rand", builtins::random}
-        };
+            config::addRuntimeFunction("lpad", builtins::leftPad);
+            config::addRuntimeFunction("rpad", builtins::rightPad);
+            config::addRuntimeFunction("mpad", builtins::middlePad);
+            config::addRuntimeFunction("ord", builtins::ordinal);
+            config::addRuntimeFunction("prec", builtins::precision);
+            config::addRuntimeFunction("rand", builtins::random);
+        }
 
-        auto it = functions.find(name);
+        auto& functions = config::getRuntimeFunctions();
+        auto it = functions.find(std::string(name));
         if (it == functions.end()) {
             return nullptr;
         }
