@@ -1,6 +1,7 @@
 #include <rift/visitor.hpp>
 
 #include <rift/nodes/binaryop.hpp>
+#include <rift/nodes/execute.hpp>
 #include <rift/nodes/functioncall.hpp>
 #include <rift/nodes/identifier.hpp>
 #include <rift/nodes/root.hpp>
@@ -70,6 +71,11 @@ namespace rift {
     }
 
     void Visitor::visit(TernaryNode* node) {
+        auto value = node->getValue(this);
+        write(value.toString());
+    }
+
+    void Visitor::visit(ExecuteNode* node) {
         auto value = node->getValue(this);
         write(value.toString());
     }

@@ -71,6 +71,7 @@ namespace rift {
                 case '/': return createToken(TokenType::SLASH, "/");
                 case '%': return createToken(TokenType::PERCENT, "%");
                 case '^': return createToken(TokenType::CARET, "^");
+                case '$': return createToken(TokenType::DOLLAR, "$");
                 case ':': {
                     if (peek() == '=') {
                         advance();

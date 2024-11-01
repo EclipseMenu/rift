@@ -22,6 +22,10 @@ namespace rift {
         /// @return The value of the variable.
         [[nodiscard]] Value getVariable(const std::string& name) const;
 
+        /// @brief Get all the variables.
+        /// @return The variables.
+        [[nodiscard]] const std::unordered_map<std::string, Value>* getVariables() const { return m_variables; }
+
         /// @brief Visit a node.
         void visit(Node* node);
 
@@ -48,6 +52,9 @@ namespace rift {
 
         /// @brief Visit a ternary operation node.
         void visit(class TernaryNode* node);
+
+        /// @brief Visit an execute node.
+        void visit(class ExecuteNode* node);
 
         /// @brief Write a string to the output.
         /// @param text The text to write.

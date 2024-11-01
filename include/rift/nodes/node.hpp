@@ -18,6 +18,7 @@ namespace rift {
             BinaryOp,
             FunctionCall,
             TernaryOp,
+            Execute
         };
 
         /// @brief Destruct the node.

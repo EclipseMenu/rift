@@ -1,6 +1,7 @@
 #include <rift/parser.hpp>
 
 #include <rift/nodes/binaryop.hpp>
+#include <rift/nodes/execute.hpp>
 #include <rift/nodes/functioncall.hpp>
 #include <rift/nodes/identifier.hpp>
 #include <rift/nodes/segment.hpp>
@@ -175,7 +176,7 @@ namespace rift {
     }
 
     Result<Node*> Parser::parsePower() {
-        auto res = parseCall();
+        auto res = parseInterpolate();
         if (!res) return res;
         auto* expression = res.getValue();
         while (m_currentToken.type == TokenType::CARET) {
@@ -188,6 +189,20 @@ namespace rift {
             expression = new BinaryOpNode(expression, right.getValue(), TokenType::CARET);
         }
         return Result<Node*>::success(expression);
+    }
+
+    Result<Node*> Parser::parseInterpolate() {
+        if (m_currentToken.type != TokenType::DOLLAR) {
+            return parseCall();
+        }
+        advance();
+        auto res = parseCall();
+        if (!res) {
+            return res;
+        }
+        auto* expression = res.getValue();
+        auto* execute = new ExecuteNode(expression);
+        return Result<Node*>::success(execute);
     }
 
     Result<Node*> Parser::parseCall() {

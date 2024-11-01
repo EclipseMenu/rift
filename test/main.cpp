@@ -91,6 +91,7 @@ int main() {
         RIFT_TEST_CASE("{duration(123.456)}", "2:03.456");
 
         RIFT_TEST_CASE("{myCustomFunc('World')}", "Hello, World!");
+        RIFT_TEST_CASE("{$'string interpolation: {2 + 2}'}", "string interpolation: 4");
     }
 
     // Show the results

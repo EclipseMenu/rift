@@ -20,6 +20,7 @@ namespace rift {
         PLUS, MINUS, STAR, SLASH, PERCENT, CARET,
         QUESTION, COLON, NULL_COALESCE, ASSIGN,
         LESS, GREATER, LESS_EQUAL, GREATER_EQUAL, EQUAL_EQUAL, NOT_EQUAL,
+        DOLLAR,
 
         // Logical operators
         AND, OR, NOT,

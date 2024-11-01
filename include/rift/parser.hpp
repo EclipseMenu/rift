@@ -31,6 +31,8 @@ namespace rift {
      *
      * power                 : call ('^' factor)*
      *
+     * interpolate           : '$' call
+     *
      * call                  : atom ('(' (expression (',' expression)*)? ')')?
      *
      * atom                  : number | string | identifier
@@ -60,7 +62,7 @@ namespace rift {
         // Parse functions
 
         Result<Node*> parseBlock();
-        inline Result<Node*> parseExpression() { return parseTernaryOp(); }
+        Result<Node*> parseExpression() { return parseTernaryOp(); }
         Result<Node*> parseTernaryOp();
         Result<Node*> parseBooleanMath();
         Result<Node*> parseComparisonExpression();
@@ -68,6 +70,7 @@ namespace rift {
         Result<Node*> parseTerm();
         Result<Node*> parseFactor();
         Result<Node*> parsePower();
+        Result<Node*> parseInterpolate();
         Result<Node*> parseCall();
         Result<Node*> parseAtom();
 
