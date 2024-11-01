@@ -1,7 +1,10 @@
 #pragma once
 
+#include <charconv>
 #include <string>
 #include <utility>
+
+#include "result.hpp"
 
 namespace rift {
 
@@ -15,7 +18,45 @@ namespace rift {
                    std::is_same_v<type, const char*>;
         }
 
-        float fastStof(std::string_view str);
+        template <typename T>
+        concept Number = std::is_same_v<T, int> || std::is_same_v<T, float>;
+
+        /// @brief Read a number from a string.
+        /// @note This function is based on the Geode SDK's `numFromString` function, but simplified for this use case.
+        /// @link https://github.com/geode-sdk/geode/blob/fd2a457e76a2d4ef6958ea83d0d5a006ac1e2dfc/loader/include/Geode/utils/general.hpp#L128
+        template <Number T>
+        Result<T> readNumber(std::string_view const str) {
+            if constexpr (std::is_floating_point_v<T>
+                #if defined(__cpp_lib_to_chars)
+                    && false
+                #endif
+            ) {
+                T result;
+                char* strEnd;
+                errno = 0;
+                result = std::strtod(str.data(), &strEnd);
+                if (errno == ERANGE) {
+                    return Err("Number is out of range");
+                }
+                if (strEnd == str.data()) {
+                    return Err("Failed to read number from string");
+                }
+                return result;
+            } else {
+                T result;
+                std::from_chars_result res;
+                if constexpr (std::is_same_v<T, int>) {
+                    res = std::from_chars(str.data(), str.data() + str.size(), result);
+                } else {
+                    res = std::from_chars(str.data(), str.data() + str.size(), result);
+                }
+                auto [ptr, ec] = res;
+                if (ec == std::errc()) {
+                    return result;
+                }
+                return Err("Failed to read number from string");
+            }
+        }
     }
 
     /// @brief A value in the AST.

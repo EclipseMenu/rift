@@ -92,6 +92,8 @@ int main() {
 
         RIFT_TEST_CASE("{myCustomFunc('World')}", "Hello, World!");
         RIFT_TEST_CASE("{$'string interpolation: {2 + 2}'}", "string interpolation: 4");
+        RIFT_TEST_CASE("{float('3.14')} {int('100')} {str(3.1415926)} {int('ABC')}", "3.14 100 3.14 NaN");
+        RIFT_TEST_CASE("{precision(float('3.149268') * 1.5, 6)}", "4.723902");
     }
 
     // Show the results

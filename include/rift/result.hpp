@@ -3,49 +3,57 @@
 #include <string>
 #include <utility>
 #include <stdexcept>
+#include <variant>
 
 namespace rift {
 
     template <typename T>
+    struct Ok {
+        T value;
+        Ok(T value) : value(std::move(value)) {}
+    };
+
+    struct Err {
+        std::string message;
+        Err(std::string message) : message(std::move(message)) {}
+    };
+
+    template <typename T>
     class [[nodiscard]] Result {
-    private:
-        explicit Result(T value) : m_value(std::move(value)), m_error(false) {}
-        Result(bool error, std::string message) : m_error(error), m_message(std::move(message)) {}
-
     public:
-        [[nodiscard]] bool isError() const { return m_error; }
-        [[nodiscard]] const std::string& getMessage() const { return m_message; }
+        Result(T value) : m_value(std::move(value)), m_error(false) {}
+        Result(Ok<T> ok) : m_value(std::move(ok.value)), m_error(false) {}
+        Result(Err err) : m_value(std::move(err.message)), m_error(true) {}
 
-        [[nodiscard]] T getValue() const { return m_value; }
+        [[nodiscard]] bool isError() const { return m_error; }
+        [[nodiscard]] const std::string& getMessage() const {
+            return std::get<std::string>(m_value);
+        }
+
+        [[nodiscard]] T getValue() const {
+            return std::get<T>(m_value);
+        }
 
         explicit operator bool() const { return !m_error; }
+        T operator*() const { return unwrap(); }
 
         T unwrap() const {
             if (m_error) {
-                throw std::runtime_error(m_message);
+                throw std::runtime_error(getMessage());
             }
-            return m_value;
+            return std::get<T>(m_value);
         }
 
         T unwrapOr(T value) const {
             if (m_error) {
                 return value;
             }
-            return m_value;
-        }
-
-        static Result<T> error(std::string message) {
-            return Result<T>(true, std::move(message));
-        }
-
-        static Result<T> success(T value) {
-            return Result<T>(std::move(value));
+            return std::get<T>(m_value);
         }
 
     private:
-        T m_value;
+        std::variant<T, std::string> m_value;
         bool m_error;
-        std::string m_message;
     };
 
 }

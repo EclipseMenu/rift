@@ -5,25 +5,6 @@
 
 namespace rift {
 
-    float util::fastStof(std::string_view str) {
-        float result = 0;
-        float factor = 1;
-        bool afterDecimal = false;
-        for (char c : str) {
-            if (c == '.') {
-                afterDecimal = true;
-                continue;
-            }
-            if (afterDecimal) {
-                factor /= 10;
-                result += static_cast<float>(c - '0') * factor;
-            } else {
-                result = result * 10 + static_cast<float>(c - '0');
-            }
-        }
-        return result;
-    }
-
     std::string Value::toString() const {
         switch (m_type) {
             case Type::String:
@@ -44,7 +25,7 @@ namespace rift {
     float Value::toFloat() const {
         switch (m_type) {
             case Type::String:
-                return util::fastStof(m_string);
+                return util::readNumber<float>(m_string).unwrapOr(0.0f);
             case Type::Integer:
                 return static_cast<float>(m_integer);
             case Type::Float:

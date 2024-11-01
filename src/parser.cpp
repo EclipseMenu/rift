@@ -25,12 +25,12 @@ namespace rift {
             auto res = parseBlock();
             if (!res) {
                 delete root;
-                return Result<RootNode*>::error(res.getMessage());
+                return Err(res.getMessage());
             }
             root->addChild(res.getValue());
         }
 
-        return Result<RootNode*>::success(root);
+        return root;
     }
 
     Result<Node*> Parser::parseBlock() {
@@ -41,7 +41,7 @@ namespace rift {
                 return expressionRes;
             }
             if (m_currentToken.type != TokenType::RIGHT_BRACE) {
-                return Result<Node*>::error(getErrorMessage("Expected '}'"));
+                return Err(getErrorMessage("Expected '}'"));
             }
             advance();
             return expressionRes;
@@ -49,7 +49,7 @@ namespace rift {
 
         auto* segment = new SegmentNode(m_currentToken.value);
         advance();
-        return Result<Node*>::success(segment);
+        return segment;
     }
 
     Result<Node*> Parser::parseTernaryOp() {
@@ -66,12 +66,11 @@ namespace rift {
         }
 
         if (ternaryMode == TokenType::NULL_COALESCE) {
-            auto* ternary = new TernaryNode(condition.getValue(), trueExpression.getValue());
-            return Result<Node*>::success(ternary);
+            return new TernaryNode(*condition, *trueExpression);
         }
 
         if (m_currentToken.type != TokenType::COLON) {
-            return Result<Node*>::error(getErrorMessage("Expected ':'"));
+            return Err(getErrorMessage("Expected ':'"));
         }
         advance();
         auto falseExpression = parseExpression();
@@ -80,8 +79,7 @@ namespace rift {
             delete condition.getValue();
             return falseExpression;
         }
-        auto* ternary = new TernaryNode(condition.getValue(), trueExpression.getValue(), falseExpression.getValue());
-        return Result<Node*>::success(ternary);
+        return new TernaryNode(*condition, *trueExpression, *falseExpression);
     }
 
     Result<Node*> Parser::parseBooleanMath() {
@@ -100,7 +98,7 @@ namespace rift {
             }
             expression = new BinaryOpNode(expression, right.getValue(), type);
         }
-        return Result<Node*>::success(expression);
+        return expression;
     }
 
     Result<Node*> Parser::parseComparisonExpression() {
@@ -119,9 +117,9 @@ namespace rift {
                 delete expression;
                 return right;
             }
-            expression = new BinaryOpNode(expression, right.getValue(), type);
+            expression = new BinaryOpNode(expression, *right, type);
         }
-        return Result<Node*>::success(expression);
+        return expression;
     }
 
     Result<Node*> Parser::parseArithmeticExpression() {
@@ -136,9 +134,9 @@ namespace rift {
                 delete expression;
                 return right;
             }
-            expression = new BinaryOpNode(expression, right.getValue(), type);
+            expression = new BinaryOpNode(expression, *right, type);
         }
-        return Result<Node*>::success(expression);
+        return expression;
     }
 
     Result<Node*> Parser::parseTerm() {
@@ -154,9 +152,9 @@ namespace rift {
                 delete expression;
                 return right;
             }
-            expression = new BinaryOpNode(expression, right.getValue(), type);
+            expression = new BinaryOpNode(expression, *right, type);
         }
-        return Result<Node*>::success(expression);
+        return expression;
     }
 
     Result<Node*> Parser::parseFactor() {
@@ -167,8 +165,7 @@ namespace rift {
                 advance();
                 auto factor = parseFactor();
                 if (!factor) return factor;
-                auto *unary = new UnaryOpNode(type, factor.getValue());
-                return Result<Node *>::success(unary);
+                return new UnaryOpNode(type, *factor);
             }
             default:
                 return parsePower();
@@ -186,9 +183,9 @@ namespace rift {
                 delete expression;
                 return right;
             }
-            expression = new BinaryOpNode(expression, right.getValue(), TokenType::CARET);
+            expression = new BinaryOpNode(expression, *right, TokenType::CARET);
         }
-        return Result<Node*>::success(expression);
+        return expression;
     }
 
     Result<Node*> Parser::parseInterpolate() {
@@ -200,9 +197,7 @@ namespace rift {
         if (!res) {
             return res;
         }
-        auto* expression = res.getValue();
-        auto* execute = new ExecuteNode(expression);
-        return Result<Node*>::success(execute);
+        return new ExecuteNode(*res);
     }
 
     Result<Node*> Parser::parseCall() {
@@ -222,7 +217,7 @@ namespace rift {
                 }
                 return argument;
             }
-            arguments.push_back(argument.getValue());
+            arguments.push_back(*argument);
             if (m_currentToken.type != TokenType::COMMA) {
                 break;
             }
@@ -232,30 +227,21 @@ namespace rift {
             delete expression;
             for (auto arg : arguments)
                 delete arg;
-            return Result<Node*>::error(getErrorMessage("Expected ')'"));
+            return Err(getErrorMessage("Expected ')'"));
         }
         advance();
-        auto* functionCall = new FunctionCallNode(expression, arguments);
-        return Result<Node*>::success(functionCall);
-    }
-
-    int readInt(std::string_view str) {
-        int result = 0;
-        for (char c : str) {
-            result = result * 10 + (c - '0');
-        }
-        return result;
+        return new FunctionCallNode(expression, arguments);
     }
 
     Result<Node*> Parser::parseAtom() {
         Node* atom;
         switch (m_currentToken.type) {
             case TokenType::FLOAT:
-                atom = new ValueNode(Value::from(util::fastStof(m_currentToken.value)));
+                atom = new ValueNode(Value::from(util::readNumber<float>(m_currentToken.value).unwrapOr(0.0f)));
                 advance();
                 break;
             case TokenType::INTEGER:
-                atom = new ValueNode(Value::from(readInt(m_currentToken.value)));
+                atom = new ValueNode(Value::from(util::readNumber<int>(m_currentToken.value).unwrapOr(0)));
                 advance();
                 break;
             case TokenType::STRING:
@@ -274,15 +260,15 @@ namespace rift {
                 }
                 if (m_currentToken.type != TokenType::RIGHT_PAREN) {
                     delete expression.getValue();
-                    return Result<Node*>::error(getErrorMessage("Expected ')'"));
+                    return Err(getErrorMessage("Expected ')'"));
                 }
                 atom = expression.getValue();
                 advance();
             } break;
             default:
-                return Result<Node*>::error(getErrorMessage("Expected number, string, identifier, or '('"));
+                return Err(getErrorMessage("Expected number, string, identifier, or '('"));
         }
-        return Result<Node*>::success(atom);
+        return atom;
     }
 
     Token Parser::advance() {

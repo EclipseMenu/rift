@@ -23,12 +23,12 @@ namespace rift {
 
         auto root = parser.parse();
         if (!root) {
-            return Result<Script*>::error(fmt::format("<ParseError: {}>", root.getMessage()));
+            return Err(fmt::format("<ParseError: {}>", root.getMessage()));
         }
 
         auto* s = new Script;
         s->m_nodes.push_back(std::unique_ptr<Node>(root.getValue()));
-        return Result<Script*>::success(s);
+        return s;
     }
 
     std::string format(std::string_view script, const std::unordered_map<std::string, Value>& variables) {

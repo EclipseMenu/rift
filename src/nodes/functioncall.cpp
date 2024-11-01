@@ -14,6 +14,59 @@
 namespace rift {
 
     namespace builtins {
+        Value convertToInt(std::span<Value> args) {
+            if (args.size() != 1) {
+                return Value::string("<error: int requires 1 argument>");
+            }
+            const auto& value = args[0];
+            if (value.isInteger()) {
+                return value;
+            }
+            if (value.isFloat()) {
+                return Value::integer(static_cast<int>(value.getFloat()));
+            }
+            if (value.isBoolean()) {
+                return Value::integer(value.getBoolean() ? 1 : 0);
+            }
+            if (value.isString()) {
+                if (auto res = util::readNumber<int>(value.toString())) {
+                    return Value::integer(res.getValue());
+                }
+                return Value::string("NaN");
+            }
+            return Value::integer(0); // null
+        }
+
+        Value convertToFloat(std::span<Value> args) {
+            if (args.size() != 1) {
+                return Value::string("<error: float requires 1 argument>");
+            }
+            const auto& value = args[0];
+            if (value.isFloat()) {
+                return value;
+            }
+            if (value.isInteger()) {
+                return Value::floating(static_cast<float>(value.getInteger()));
+            }
+            if (value.isBoolean()) {
+                return Value::floating(value.getBoolean() ? 1.0f : 0.0f);
+            }
+            if (value.isString()) {
+                if (auto res = util::readNumber<float>(value.toString())) {
+                    return Value::floating(res.getValue());
+                }
+                return Value::string("NaN");
+            }
+            return Value::floating(0.0f); // null
+        }
+
+        Value convertToString(std::span<Value> args) {
+            if (args.size() != 1) {
+                return Value::string("<error: string requires 1 argument>");
+            }
+            return Value::string(args[0].toString());
+        }
+
         Value len(std::span<Value> args) {
             if (args.size() != 1) {
                 return Value::string("<error: len requires 1 argument>");
@@ -488,6 +541,9 @@ namespace rift {
         if (!initialized) {
             // Initialize the function map
             initialized = true;
+            config::addRuntimeFunction("int", builtins::convertToInt);
+            config::addRuntimeFunction("float", builtins::convertToFloat);
+            config::addRuntimeFunction("str", builtins::convertToString);
             config::addRuntimeFunction("len", builtins::len);
             config::addRuntimeFunction("substr", builtins::substr);
             config::addRuntimeFunction("toUpper", builtins::toUpper);
