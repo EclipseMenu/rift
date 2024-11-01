@@ -113,10 +113,19 @@ namespace rift {
 
         // If either value is a string, repeat it n times, where n is the second value.
         if (isString() || other.isString()) {
+            // make sure only one of them is a string
+            if (isString() && other.isString()) {
+                return string("<error: multiplication of strings>");
+            }
+
+            // figure out which one is string
+            const Value &str = isString() ? *this : other;
+            const Value &num = isString() ? other : *this;
+
+            // repeat the string n times
             std::string result;
-            auto count = other.isInteger() ? other.toInteger() : static_cast<int>(other.toFloat());
-            for (int i = 0; i < count; ++i) {
-                result += isString() ? getString() : other.getString();
+            for (int i = 0; i < num.toInteger(); ++i) {
+                result += str.toString();
             }
             return string(std::move(result));
         }
