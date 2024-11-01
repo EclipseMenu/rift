@@ -19,48 +19,47 @@ namespace rift {
         }
 
         template <typename T>
-        concept Number = std::is_same_v<T, int> || std::is_same_v<T, float>;
+        concept Number = std::is_integral_v<T> || std::is_floating_point_v<T>;
 
         /// @brief Read a number from a string.
-        /// @note This function is based on the Geode SDK's `numFromString` function, but simplified for this use case.
-        /// @link https://github.com/geode-sdk/geode/blob/fd2a457e76a2d4ef6958ea83d0d5a006ac1e2dfc/loader/include/Geode/utils/general.hpp#L128
-        template <Number T>
-        Result<T> readNumber(std::string_view const str) {
-            if constexpr (std::is_floating_point_v<T>
+        /// @note This code is taken from the
+        /// <a href="https://github.com/geode-sdk/geode/blob/fd2a457e76a2d4ef6958ea83d0d5a006ac1e2dfc/loader/include/Geode/utils/general.hpp#L128">
+        /// Geode SDK `numFromString` function.
+        /// </a>
+        template <Number Num>
+        Result<Num> readNumber(std::string_view const str) {
+            if constexpr (std::is_floating_point_v<Num>
                 #if defined(__cpp_lib_to_chars)
                     && false
                 #endif
             ) {
-                T result;
+                Num val;
                 char* strEnd;
                 errno = 0;
-                result = std::strtod(str.data(), &strEnd);
-                if (errno == ERANGE) {
-                    return Err("Number is out of range");
-                }
-                if (strEnd == str.data()) {
-                    return Err("Failed to read number from string");
-                }
-                return result;
+                if constexpr (std::is_same_v<Num, float>) val = std::strtof(str.data(), &strEnd);
+                else if constexpr (std::is_same_v<Num, double>) val = std::strtod(str.data(), &strEnd);
+                else if constexpr (std::is_same_v<Num, long double>) val = std::strtold(str.data(), &strEnd);
+                if (errno == ERANGE) return Err("Number is too large to fit");
+                if (strEnd == str.data()) return Err("String is not a number");
+                return val;
             } else {
-                T result;
+                Num result;
                 std::from_chars_result res;
-                if constexpr (std::is_same_v<T, int>) {
-                    res = std::from_chars(str.data(), str.data() + str.size(), result);
-                } else {
-                    res = std::from_chars(str.data(), str.data() + str.size(), result);
-                }
+                if constexpr (std::is_floating_point_v<Num>) res = std::from_chars(str.data(), str.data() + str.size(), result);
+                else res = std::from_chars(str.data(), str.data() + str.size(), result);
+
                 auto [ptr, ec] = res;
-                if (ec == std::errc()) {
-                    return result;
-                }
-                return Err("Failed to read number from string");
+                if (ec == std::errc()) return result;
+                if (ptr != str.data() + str.size()) return Err("String contains trailing extra data");
+                if (ec == std::errc::invalid_argument) return Err("String is not a number");
+                if (ec == std::errc::result_out_of_range) return Err("Number is too large to fit");
+                return Err("Unknown error");
             }
         }
     }
 
     /// @brief A value in the AST.
-    class Value {
+    class [[nodiscard]] Value {
     public:
         enum class Type {
             Null,
@@ -70,47 +69,38 @@ namespace rift {
             Boolean,
         };
 
+    private:
+        Value(Type type, std::variant<int64_t, double, bool, std::string, std::monostate> value)
+            : m_type(type), m_value(std::move(value)) {}
+
+    public:
         static Value null() {
-            Value result;
-            result.m_type = Type::Null;
-            return result;
+            return Value(Type::Null, std::monostate{});
         }
 
-        static Value string(std::string_view value) {
-            Value result;
-            result.m_type = Type::String;
-            result.m_string = value;
-            return result;
+        static Value string(std::string value) {
+            return Value(Type::String, std::move(value));
         }
 
-        static Value integer(int value) {
-            Value result;
-            result.m_type = Type::Integer;
-            result.m_integer = value;
-            return result;
+        static Value integer(int64_t value) {
+            return Value(Type::Integer, value);
         }
 
-        static Value floating(float value) {
-            Value result;
-            result.m_type = Type::Float;
-            result.m_float = value;
-            return result;
+        static Value floating(double value) {
+            return Value(Type::Float, value);
         }
 
         static Value boolean(bool value) {
-            Value result;
-            result.m_type = Type::Boolean;
-            result.m_boolean = value;
-            return result;
+            return Value(Type::Boolean, value);
         }
 
-        template<typename T>
-        static Value from(const T& value) {
+        template <typename T>
+        static Value from(T value) {
             if constexpr (util::isStringType<T>()) {
-                return string(value);
-            } else if constexpr (std::is_same_v<T, int>) {
+                return string(std::move(value));
+            } else if constexpr (std::is_integral_v<T>) {
                 return integer(value);
-            } else if constexpr (std::is_same_v<T, float>) {
+            } else if constexpr (std::is_floating_point_v<T>) {
                 return floating(value);
             } else if constexpr (std::is_same_v<T, bool>) {
                 return boolean(value);
@@ -125,128 +115,46 @@ namespace rift {
             return string(value);
         }
 
-        Value() = default;
+        bool isString() const { return m_type == Type::String; }
+        bool isInteger() const { return m_type == Type::Integer; }
+        bool isFloat() const { return m_type == Type::Float; }
+        bool isBoolean() const { return m_type == Type::Boolean; }
+        bool isNull() const { return m_type == Type::Null; }
 
-        /// @brief Get the type of the value.
-        /// @return The type of the value.
-        [[nodiscard]] Type getType() const { return m_type; }
+        Type getType() const { return m_type; }
 
-        /// @brief Get the string value.
-        /// @return The string value.
-        [[nodiscard]] const std::string& getString() const { return m_string; }
+        const std::string& getString() const { return std::get<std::string>(m_value); }
+        int64_t getInteger() const { return std::get<int64_t>(m_value); }
+        double getFloat() const { return std::get<double>(m_value); }
+        bool getBoolean() const { return std::get<bool>(m_value); }
 
-        /// @brief Get the integer value.
-        /// @return The integer value.
-        [[nodiscard]] int getInteger() const { return m_integer; }
+        std::string toString() const;
+        int64_t toInteger() const;
+        double toFloat() const;
+        bool toBool() const;
 
-        /// @brief Get the float value.
-        /// @return The float value.
-        [[nodiscard]] float getFloat() const { return m_float; }
+        Value operator+(const Value& other) const;
+        Value operator-(const Value& other) const;
+        Value operator*(const Value& other) const;
+        Value operator/(const Value& other) const;
+        Value operator%(const Value& other) const;
+        Value operator^(const Value& other) const;
 
-        /// @brief Get the boolean value.
-        /// @return The boolean value.
-        [[nodiscard]] bool getBoolean() const { return m_boolean; }
+        Value operator==(const Value& other) const;
+        Value operator!=(const Value& other) const;
+        Value operator<(const Value& other) const;
+        Value operator>(const Value& other) const;
+        Value operator<=(const Value& other) const;
+        Value operator>=(const Value& other) const;
 
-        /// @brief Convert the value to a string.
-        /// @return The string representation of the value.
-        [[nodiscard]] std::string toString() const;
-
-        /// @brief Convert the value to a float.
-        /// @return The float representation of the value.
-        [[nodiscard]] float toFloat() const;
-
-        /// @brief Adds two values together.
-        /// @param other The other value to add.
-        /// @return The result of the addition.
-        [[nodiscard]] Value operator+(const Value& other) const;
-
-        /// @brief Subtracts two values.
-        /// @param other The other value to subtract.
-        /// @return The result of the subtraction.
-        [[nodiscard]] Value operator-(const Value& other) const;
-
-        /// @brief Multiplies two values.
-        /// @param other The other value to multiply.
-        /// @return The result of the multiplication.
-        [[nodiscard]] Value operator*(const Value& other) const;
-
-        /// @brief Divides two values.
-        /// @param other The other value to divide.
-        /// @return The result of the division.
-        [[nodiscard]] Value operator/(const Value& other) const;
-
-        /// @brief Modulus two values.
-        /// @param other The other value to modulus.
-        /// @return The result of the modulus.
-        [[nodiscard]] Value operator%(const Value& other) const;
-
-        /// @brief Exponentiate two values.
-        /// @param other The other value to exponentiate.
-        /// @return The result of the exponentiation.
-        [[nodiscard]] Value operator^(const Value& other) const;
-
-        /// @brief Compare two values for equality.
-        /// @param other The other value to compare.
-        /// @return The result of the comparison.
-        [[nodiscard]] Value operator==(const Value& other) const;
-
-        /// @brief Compare two values for inequality.
-        /// @param other The other value to compare.
-        /// @return The result of the comparison.
-        [[nodiscard]] Value operator!=(const Value& other) const;
-
-        /// @brief Compare two values for less than.
-        /// @param other The other value to compare.
-        /// @return The result of the comparison.
-        [[nodiscard]] Value operator<(const Value& other) const;
-
-        /// @brief Compare two values for greater than.
-        /// @param other The other value to compare.
-        /// @return The result of the comparison.
-        [[nodiscard]] Value operator>(const Value& other) const;
-
-        /// @brief Compare two values for less than or equal to.
-        /// @param other The other value to compare.
-        /// @return The result of the comparison.
-        [[nodiscard]] Value operator<=(const Value& other) const;
-
-        /// @brief Compare two values for greater than or equal to.
-        /// @param other The other value to compare.
-        /// @return The result of the comparison.
-        [[nodiscard]] Value operator>=(const Value& other) const;
-
-        /// @brief Negate a value.
-        /// @return The negated value.
-        [[nodiscard]] Value operator-() const;
-
-        /// @brief Logical AND two values.
-        /// @param other The other value to AND.
-        /// @return The result of the AND operation.
-        [[nodiscard]] Value operator&&(const Value& other) const;
-
-        /// @brief Logical OR two values.
-        /// @param other The other value to OR.
-        /// @return The result of the OR operation.
-        [[nodiscard]] Value operator||(const Value& other) const;
-
-        /// @brief Logical NOT a value.
-        /// @return The result of the NOT operation.
-        [[nodiscard]] Value operator!() const;
-
-        [[nodiscard]] bool isString() const { return m_type == Type::String; }
-        [[nodiscard]] bool isInteger() const { return m_type == Type::Integer; }
-        [[nodiscard]] bool isFloat() const { return m_type == Type::Float; }
-        [[nodiscard]] bool isBoolean() const { return m_type == Type::Boolean; }
-        [[nodiscard]] bool isNull() const { return m_type == Type::Null; }
+        Value operator-() const;
+        Value operator&&(const Value& other) const;
+        Value operator||(const Value& other) const;
+        Value operator!() const;
 
     private:
-        Type m_type = Type::String;
-        std::string m_string; // strings have to be stored separately
-        union {
-            int m_integer{};
-            float m_float;
-            bool m_boolean;
-        };
+        Type m_type = Type::Null;
+        std::variant<int64_t, double, bool, std::string, std::monostate> m_value;
     };
 
 }

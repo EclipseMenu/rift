@@ -8,582 +8,373 @@ namespace rift {
     std::string Value::toString() const {
         switch (m_type) {
             case Type::String:
-                return m_string;
+                return getString();
             case Type::Integer:
-                return std::to_string(m_integer);
+                return std::to_string(getInteger());
             case Type::Float:
-                return fmt::format("{:.2f}", m_float);
+                return fmt::format("{:.2f}", getFloat());
             case Type::Boolean:
-                return m_boolean ? "true" : "false";
-            case Type::Null:
+                return getBoolean() ? "true" : "false";
+            default:
                 return "null";
         }
-
-        return "<invalid value>";
     }
 
-    float Value::toFloat() const {
+    int64_t Value::toInteger() const {
         switch (m_type) {
             case Type::String:
-                return util::readNumber<float>(m_string).unwrapOr(0.0f);
+                return util::readNumber<int64_t>(getString()).unwrapOr(0);
             case Type::Integer:
-                return static_cast<float>(m_integer);
+                return getInteger();
             case Type::Float:
-                return m_float;
+                return static_cast<int64_t>(getFloat());
             case Type::Boolean:
-                return m_boolean ? 1.0f : 0.0f;
-            case Type::Null:
-                return 0.0f;
+                return getBoolean() ? 1 : 0;
+            default:
+                return 0;
         }
-
-        return 0.0f;
     }
 
-    Value Value::operator+(const Value& other) const {
+    double Value::toFloat() const {
+        switch (m_type) {
+            case Type::String:
+                return util::readNumber<double>(getString()).unwrapOr(0.0);
+            case Type::Integer:
+                return static_cast<double>(getInteger());
+            case Type::Float:
+                return getFloat();
+            case Type::Boolean:
+                return getBoolean() ? 1.0 : 0.0;
+            default:
+                return 0.0;
+        }
+    }
+
+    bool Value::toBool() const {
+        switch (m_type) {
+            case Type::String:
+                return !getString().empty();
+            case Type::Integer:
+                return getInteger() != 0;
+            case Type::Float:
+                return getFloat() != 0.0;
+            case Type::Boolean:
+                return getBoolean();
+            default:
+                return false;
+        }
+    }
+
+    Value Value::operator+(const Value &other) const {
         // If either value is null, return null.
-        if (m_type == Type::Null || other.m_type == Type::Null) {
-            return Value::null();
+        if (isNull() || other.isNull()) {
+            return null();
         }
 
         // If either value is a string, concatenate them.
-        if (m_type == Type::String || other.m_type == Type::String) {
-            return Value::string(toString() + other.toString());
+        if (isString() || other.isString()) {
+            return string(toString() + other.toString());
         }
 
-        // If either value is a boolean, convert them to integers and add them.
-        if (m_type == Type::Boolean || other.m_type == Type::Boolean) {
-            return Value::integer(m_integer + other.m_integer);
+        // If either value is a float, convert them to floats and add them.
+        if (isFloat() || other.isFloat()) {
+            return floating(toFloat() + other.toFloat());
         }
 
-        // If both values are numbers, add them.
-        if (m_type == Type::Integer && other.m_type == Type::Integer) {
-            return Value::integer(m_integer + other.m_integer);
-        }
-
-        if (m_type == Type::Float && other.m_type == Type::Float) {
-            return Value::floating(m_float + other.m_float);
-        }
-
-        // If one of the values is a float, convert the other to a float and add them.
-        if (m_type == Type::Float) {
-            return Value::floating(m_float + other.toFloat());
-        }
-
-        return Value::floating(toFloat() + other.toFloat());
+        // In other cases, add the integer values.
+        return integer(toInteger() + other.toInteger());
     }
 
-    Value Value::operator-(const Value& other) const {
+    Value Value::operator-(const Value &other) const {
         // If either value is null, return null.
-        if (m_type == Type::Null || other.m_type == Type::Null) {
-            return Value::null();
+        if (isNull() || other.isNull()) {
+            return null();
         }
 
         // If either value is a string, we can't subtract them.
-        if (m_type == Type::String || other.m_type == Type::String) {
-            return Value::string("<error: subtraction of strings>");
+        if (isString() || other.isString()) {
+            return string("<error: subtraction of strings>");
         }
 
-        // If either value is a boolean, convert them to integers and subtract them.
-        if (m_type == Type::Boolean || other.m_type == Type::Boolean) {
-            return Value::integer(m_integer - other.m_integer);
+        // If either value is a float, convert them to floats and subtract them.
+        if (isFloat() || other.isFloat()) {
+            return floating(toFloat() - other.toFloat());
         }
 
-        // If both values are numbers, subtract them.
-        if (m_type == Type::Integer && other.m_type == Type::Integer) {
-            return Value::integer(m_integer - other.m_integer);
-        }
-
-        if (m_type == Type::Float && other.m_type == Type::Float) {
-            return Value::floating(m_float - other.m_float);
-        }
-
-        // If one of the values is a float, convert the other to a float and subtract them.
-        if (m_type == Type::Float) {
-            return Value::floating(m_float - other.toFloat());
-        }
-
-        return Value::floating(toFloat() - other.toFloat());
+        // In other cases, subtract the integer values.
+        return integer(toInteger() - other.toInteger());
     }
 
-    Value Value::operator*(const Value& other) const {
+    Value Value::operator*(const Value &other) const {
         // If either value is null, return null.
-        if (m_type == Type::Null || other.m_type == Type::Null) {
-            return Value::null();
+        if (isNull() || other.isNull()) {
+            return null();
         }
 
-        // If first value is a string, repeat it n times where n is the second value.
-        if (m_type == Type::String && (other.m_type == Type::Integer || other.m_type == Type::Float)) {
+        // If either value is a string, repeat it n times, where n is the second value.
+        if (isString() || other.isString()) {
             std::string result;
-            auto count = other.m_type == Type::Integer ? other.m_integer : static_cast<int>(other.m_float);
+            auto count = other.isInteger() ? other.toInteger() : static_cast<int>(other.toFloat());
             for (int i = 0; i < count; ++i) {
-                result += m_string;
+                result += isString() ? getString() : other.getString();
             }
-            return Value::string(std::move(result));
-        } else if (other.m_type == Type::String && (m_type == Type::Integer || m_type == Type::Float)) {
-            std::string result;
-            auto count = m_type == Type::Integer ? m_integer : static_cast<int>(m_float);
-            for (int i = 0; i < count; ++i) {
-                result += other.m_string;
-            }
-            return Value::string(std::move(result));
-        } else if (m_type == Type::String || other.m_type == Type::String) {
-            return Value::string("<error: multiplication of strings>");
+            return string(std::move(result));
         }
 
-        // If either value is a boolean, convert them to integers and multiply them.
-        if (m_type == Type::Boolean || other.m_type == Type::Boolean) {
-            return Value::integer(m_integer * other.m_integer);
+        // If either value is a float, convert them to floats and multiply them.
+        if (isFloat() || other.isFloat()) {
+            return floating(toFloat() * other.toFloat());
         }
 
-        // If both values are numbers, multiply them.
-        if (m_type == Type::Integer && other.m_type == Type::Integer) {
-            return Value::integer(m_integer * other.m_integer);
-        }
-
-        if (m_type == Type::Float && other.m_type == Type::Float) {
-            return Value::floating(m_float * other.m_float);
-        }
-
-        // If one of the values is a float, convert the other to a float and multiply them.
-        if (m_type == Type::Float) {
-            return Value::floating(m_float * other.toFloat());
-        }
-
-        return Value::floating(toFloat() * other.toFloat());
+        // In other cases, multiply the integer values.
+        return integer(toInteger() * other.toInteger());
     }
 
-    Value Value::operator/(const Value& other) const {
+    Value Value::operator/(const Value &other) const {
         // If either value is null, return null.
-        if (m_type == Type::Null || other.m_type == Type::Null) {
-            return Value::null();
+        if (isNull() || other.isNull()) {
+            return null();
         }
 
         // If either value is a string, we can't divide them.
-        if (m_type == Type::String || other.m_type == Type::String) {
-            return Value::string("<error: division of strings>");
+        if (isString() || other.isString()) {
+            return string("<error: division of strings>");
         }
 
-        // If either value is a boolean, convert them to integers and divide them.
-        if (m_type == Type::Boolean || other.m_type == Type::Boolean) {
-            // check for division by zero
-            if (other.m_integer == 0) {
-                return Value::floating(std::numeric_limits<float>::infinity());
-            }
-            return Value::integer(m_integer / other.m_integer);
-        }
-
-        // If both values are numbers, divide them.
-        if (m_type == Type::Integer && other.m_type == Type::Integer) {
-            // check for division by zero
-            if (other.m_integer == 0) {
-                return Value::floating(std::numeric_limits<float>::infinity());
-            }
-            return Value::integer(m_integer / other.m_integer);
-        }
-
-        if (m_type == Type::Float && other.m_type == Type::Float) {
-            // check for division by zero
-            if (other.m_float == 0) {
-                return Value::floating(std::numeric_limits<float>::infinity());
-            }
-            return Value::floating(m_float / other.m_float);
-        }
-
-        // If one of the values is a float, convert the other to a float and divide them.
-        if (m_type == Type::Float) {
+        // If either value is a float, convert them to floats and divide them.
+        if (isFloat() || other.isFloat()) {
             // check for division by zero
             if (other.toFloat() == 0) {
-                return Value::floating(std::numeric_limits<float>::infinity());
+                return floating(std::numeric_limits<double>::infinity());
             }
-            return Value::floating(m_float / other.toFloat());
+            return floating(toFloat() / other.toFloat());
         }
 
-        if (other.toFloat() == 0) {
-            return Value::floating(std::numeric_limits<float>::infinity());
+        // In other cases, divide the integer values.
+        // check for division by zero
+        if (other.toInteger() == 0) {
+            return floating(std::numeric_limits<double>::infinity());
         }
-        return Value::floating(toFloat() / other.toFloat());
+        return integer(toInteger() / other.toInteger());
     }
 
-    Value Value::operator%(const Value& other) const {
+    Value Value::operator%(const Value &other) const {
         // If either value is null, return null.
-        if (m_type == Type::Null || other.m_type == Type::Null) {
-            return Value::null();
+        if (isNull() || other.isNull()) {
+            return null();
         }
 
         // If either value is a string, we can't divide them.
-        if (m_type == Type::String || other.m_type == Type::String) {
-            return Value::string("<error: modulo of strings>");
+        if (isString() || other.isString()) {
+            return string("<error: modulo of strings>");
         }
 
-        // If either value is a boolean, convert them to integers and divide them.
-        if (m_type == Type::Boolean || other.m_type == Type::Boolean) {
-            // check for division by zero
-            if (other.m_integer == 0) {
-                return Value::floating(std::numeric_limits<float>::infinity());
-            }
-            return Value::integer(m_integer % other.m_integer);
-        }
-
-        // If both values are numbers, divide them.
-        if (m_type == Type::Integer && other.m_type == Type::Integer) {
-            // check for division by zero
-            if (other.m_integer == 0) {
-                return Value::floating(std::numeric_limits<float>::infinity());
-            }
-            return Value::integer(m_integer % other.m_integer);
-        }
-
-        if (m_type == Type::Float && other.m_type == Type::Float) {
-            // check for division by zero
-            if (other.m_float == 0) {
-                return Value::floating(std::numeric_limits<float>::infinity());
-            }
-            return Value::floating(std::fmod(m_float, other.m_float));
-        }
-
-        // If one of the values is a float, convert the other to a float and divide them.
-        if (m_type == Type::Float) {
+        // If either value is a float, convert them to floats and divide them.
+        if (isFloat() || other.isFloat()) {
             // check for division by zero
             if (other.toFloat() == 0) {
-                return Value::floating(std::numeric_limits<float>::infinity());
+                return floating(std::numeric_limits<double>::infinity());
             }
-            return Value::floating(std::fmod(m_float, other.toFloat()));
+            return floating(std::fmod(toFloat(), other.toFloat()));
         }
 
-        return Value::floating(std::fmod(toFloat(), other.toFloat()));
+        // In other cases, divide the integer values.
+        // check for division by zero
+        if (other.toInteger() == 0) {
+            return floating(std::numeric_limits<double>::infinity());
+        }
+        return integer(toInteger() % other.toInteger());
     }
 
-    Value Value::operator^(const rift::Value &other) const {
+    Value Value::operator^(const Value &other) const {
         // If either value is null, return null.
-        if (m_type == Type::Null || other.m_type == Type::Null) {
-            return Value::null();
+        if (isNull() || other.isNull()) {
+            return null();
         }
 
         // If either value is a string, we can't raise them to a power.
-        if (m_type == Type::String || other.m_type == Type::String) {
-            return Value::string("<error: exponentiation of strings>");
+        if (isString() || other.isString()) {
+            return string("<error: exponentiation of strings>");
         }
 
-        // If either value is a boolean, convert them to integers and raise them to a power.
-        if (m_type == Type::Boolean || other.m_type == Type::Boolean) {
-            return Value::integer(std::pow(m_integer, other.m_integer));
+        // If either value is a float, convert them to floats and raise them to a power.
+        if (isFloat() || other.isFloat()) {
+            return floating(std::pow(toFloat(), other.toFloat()));
         }
 
-        // If both values are numbers, raise them to a power.
-        if (m_type == Type::Integer && other.m_type == Type::Integer) {
-            return Value::integer(std::pow(m_integer, other.m_integer));
-        }
-
-        if (m_type == Type::Float && other.m_type == Type::Float) {
-            return Value::floating(std::pow(m_float, other.m_float));
-        }
-
-        // If one of the values is a float, convert the other to a float and raise them to a power.
-        if (m_type == Type::Float) {
-            return Value::floating(std::pow(m_float, other.toFloat()));
-        }
-
-        return Value::floating(std::pow(toFloat(), other.toFloat()));
+        // In other cases, raise the integer values to a power.
+        return integer(std::pow(toInteger(), other.toInteger()));
     }
 
-    Value Value::operator==(const Value& other) const {
+    Value Value::operator==(const Value &other) const {
         // If both values are null, return true.
-        if (m_type == Type::Null && other.m_type == Type::Null) {
-            return Value::boolean(true);
+        if (isNull() && other.isNull()) {
+            return boolean(true);
         }
 
-        // If either value is null, return false
-        if (m_type == Type::Null || other.m_type == Type::Null) {
-            return Value::boolean(false);
+        // If either value is null, return false.
+        if (isNull() || other.isNull()) {
+            return boolean(false);
         }
 
         // If either value is a string, compare them.
-        if (m_type == Type::String || other.m_type == Type::String) {
-            return Value::boolean(toString() == other.toString());
+        if (isString() || other.isString()) {
+            return boolean(toString() == other.toString());
         }
 
-        // If either value is a boolean, convert them to integers and compare them.
-        if (m_type == Type::Boolean || other.m_type == Type::Boolean) {
-            return Value::boolean(m_integer == other.m_integer);
+        // If either value is float, convert them to floats and compare them.
+        if (isFloat() || other.isFloat()) {
+            return boolean(toFloat() == other.toFloat());
         }
 
-        // If both values are numbers, compare them.
-        if (m_type == Type::Integer && other.m_type == Type::Integer) {
-            return Value::boolean(m_integer == other.m_integer);
-        }
-
-        if (m_type == Type::Float && other.m_type == Type::Float) {
-            return Value::boolean(m_float == other.m_float);
-        }
-
-        // If one of the values is a float, convert the other to a float and compare them.
-        if (m_type == Type::Float) {
-            return Value::boolean(m_float == other.toFloat());
-        }
-
-        return Value::boolean(toFloat() == other.toFloat());
+        // In other cases, compare the integer values.
+        return boolean(toInteger() == other.toInteger());
     }
 
-    Value Value::operator!=(const Value& other) const {
+    Value Value::operator!=(const Value &other) const {
         // If both values are null, return false.
-        if (m_type == Type::Null && other.m_type == Type::Null) {
-            return Value::boolean(false);
+        if (isNull() && other.isNull()) {
+            return boolean(false);
         }
 
         // If either value is null, return true.
-        if (m_type == Type::Null || other.m_type == Type::Null) {
-            return Value::boolean(true);
+        if (isNull() || other.isNull()) {
+            return boolean(true);
         }
 
         // If either value is a string, compare them.
-        if (m_type == Type::String || other.m_type == Type::String) {
-            return Value::boolean(toString() != other.toString());
+        if (isString() || other.isString()) {
+            return boolean(toString() != other.toString());
         }
 
-        // If either value is a boolean, convert them to integers and compare them.
-        if (m_type == Type::Boolean || other.m_type == Type::Boolean) {
-            return Value::boolean(m_integer != other.m_integer);
+        // If either value is float, convert them to floats and compare them.
+        if (isFloat() || other.isFloat()) {
+            return boolean(toFloat() != other.toFloat());
         }
 
-        // If both values are numbers, compare them.
-        if (m_type == Type::Integer && other.m_type == Type::Integer) {
-            return Value::boolean(m_integer != other.m_integer);
-        }
-
-        if (m_type == Type::Float && other.m_type == Type::Float) {
-            return Value::boolean(m_float != other.m_float);
-        }
-
-        // If one of the values is a float, convert the other to a float and compare them.
-        if (m_type == Type::Float) {
-            return Value::boolean(m_float != other.toFloat());
-        }
-
-        return Value::boolean(toFloat() != other.toFloat());
+        // In other cases, compare the integer values.
+        return boolean(toInteger() != other.toInteger());
     }
 
-    Value Value::operator<(const Value& other) const {
+    Value Value::operator<(const Value &other) const {
         // If either value is null, return false.
-        if (m_type == Type::Null || other.m_type == Type::Null) {
-            return Value::boolean(false);
+        if (isNull() || other.isNull()) {
+            return boolean(false);
         }
 
         // If either value is a string, compare them.
-        if (m_type == Type::String || other.m_type == Type::String) {
-            return Value::boolean(toString() < other.toString());
+        if (isString() || other.isString()) {
+            return boolean(toString() < other.toString());
         }
 
-        // If either value is a boolean, convert them to integers and compare them.
-        if (m_type == Type::Boolean || other.m_type == Type::Boolean) {
-            return Value::boolean(m_integer < other.m_integer);
+        // If either value is float, convert them to floats and compare them.
+        if (isFloat() || other.isFloat()) {
+            return boolean(toFloat() < other.toFloat());
         }
 
-        // If both values are numbers, compare them.
-        if (m_type == Type::Integer && other.m_type == Type::Integer) {
-            return Value::boolean(m_integer < other.m_integer);
-        }
-
-        if (m_type == Type::Float && other.m_type == Type::Float) {
-            return Value::boolean(m_float < other.m_float);
-        }
-
-        // If one of the values is a float, convert the other to a float and compare them.
-        if (m_type == Type::Float) {
-            return Value::boolean(m_float < other.toFloat());
-        }
-
-        return Value::boolean(toFloat() < other.toFloat());
+        // In other cases, compare the integer values.
+        return boolean(toInteger() < other.toInteger());
     }
 
-    Value Value::operator>(const Value& other) const {
+    Value Value::operator>(const Value &other) const {
         // If either value is null, return false.
-        if (m_type == Type::Null || other.m_type == Type::Null) {
-            return Value::boolean(false);
+        if (isNull() || other.isNull()) {
+            return boolean(false);
         }
 
         // If either value is a string, compare them.
-        if (m_type == Type::String || other.m_type == Type::String) {
-            return Value::boolean(toString() > other.toString());
+        if (isString() || other.isString()) {
+            return boolean(toString() > other.toString());
         }
 
-        // If either value is a boolean, convert them to integers and compare them.
-        if (m_type == Type::Boolean || other.m_type == Type::Boolean) {
-            return Value::boolean(m_integer > other.m_integer);
+        // If either value is float, convert them to floats and compare them.
+        if (isFloat() || other.isFloat()) {
+            return boolean(toFloat() > other.toFloat());
         }
 
-        // If both values are numbers, compare them.
-        if (m_type == Type::Integer && other.m_type == Type::Integer) {
-            return Value::boolean(m_integer > other.m_integer);
-        }
-
-        if (m_type == Type::Float && other.m_type == Type::Float) {
-            return Value::boolean(m_float > other.m_float);
-        }
-
-        // If one of the values is a float, convert the other to a float and compare them.
-        if (m_type == Type::Float) {
-            return Value::boolean(m_float > other.toFloat());
-        }
-
-        return Value::boolean(toFloat() > other.toFloat());
+        // In other cases, compare the integer values.
+        return boolean(toInteger() > other.toInteger());
     }
 
-    Value Value::operator<=(const Value& other) const {
+    Value Value::operator<=(const Value &other) const {
         // If either value is null, return false.
-        if (m_type == Type::Null || other.m_type == Type::Null) {
-            return Value::boolean(false);
+        if (isNull() || other.isNull()) {
+            return boolean(false);
         }
 
         // If either value is a string, compare them.
-        if (m_type == Type::String || other.m_type == Type::String) {
-            return Value::boolean(toString() <= other.toString());
+        if (isString() || other.isString()) {
+            return boolean(toString() <= other.toString());
         }
 
-        // If either value is a boolean, convert them to integers and compare them.
-        if (m_type == Type::Boolean || other.m_type == Type::Boolean) {
-            return Value::boolean(m_integer <= other.m_integer);
+        // If either value is float, convert them to floats and compare them.
+        if (isFloat() || other.isFloat()) {
+            return boolean(toFloat() <= other.toFloat());
         }
 
-        // If both values are numbers, compare them.
-        if (m_type == Type::Integer && other.m_type == Type::Integer) {
-            return Value::boolean(m_integer <= other.m_integer);
-        }
-
-        if (m_type == Type::Float && other.m_type == Type::Float) {
-            return Value::boolean(m_float <= other.m_float);
-        }
-
-        // If one of the values is a float, convert the other to a float and compare them.
-        if (m_type == Type::Float) {
-            return Value::boolean(m_float <= other.toFloat());
-        }
-
-        return Value::boolean(toFloat() <= other.toFloat());
+        // In other cases, compare the integer values.
+        return boolean(toInteger() <= other.toInteger());
     }
 
-    Value Value::operator>=(const Value& other) const {
+    Value Value::operator>=(const Value &other) const {
         // If either value is null, return false.
-        if (m_type == Type::Null || other.m_type == Type::Null) {
-            return Value::boolean(false);
+        if (isNull() || other.isNull()) {
+            return boolean(false);
         }
 
         // If either value is a string, compare them.
-        if (m_type == Type::String || other.m_type == Type::String) {
-            return Value::boolean(toString() >= other.toString());
+        if (isString() || other.isString()) {
+            return boolean(toString() >= other.toString());
         }
 
-        // If either value is a boolean, convert them to integers and compare them.
-        if (m_type == Type::Boolean || other.m_type == Type::Boolean) {
-            return Value::boolean(m_integer >= other.m_integer);
+        // If either value is float, convert them to floats and compare them.
+        if (isFloat() || other.isFloat()) {
+            return boolean(toFloat() >= other.toFloat());
         }
 
-        // If both values are numbers, compare them.
-        if (m_type == Type::Integer && other.m_type == Type::Integer) {
-            return Value::boolean(m_integer >= other.m_integer);
-        }
-
-        if (m_type == Type::Float && other.m_type == Type::Float) {
-            return Value::boolean(m_float >= other.m_float);
-        }
-
-        // If one of the values is a float, convert the other to a float and compare them.
-        if (m_type == Type::Float) {
-            return Value::boolean(m_float >= other.toFloat());
-        }
-
-        return Value::boolean(toFloat() >= other.toFloat());
-    }
-
-    Value Value::operator&&(const Value& other) const {
-        // If either value is null, return false.
-        if (m_type == Type::Null || other.m_type == Type::Null) {
-            return Value::boolean(false);
-        }
-
-        // If either value is a string, we can't perform logical AND on them.
-        if (m_type == Type::String || other.m_type == Type::String) {
-            return Value::boolean(false);
-        }
-
-        // If either value is a boolean, perform logical AND on them.
-        if (m_type == Type::Boolean && other.m_type == Type::Boolean) {
-            return Value::boolean(m_boolean && other.m_boolean);
-        }
-
-        // If both values are numbers, convert them to booleans and perform logical AND on them.
-        return Value::boolean(m_integer && other.m_integer);
-    }
-
-    Value Value::operator||(const Value& other) const {
-        // If both values are null, return false.
-        if (m_type == Type::Null && other.m_type == Type::Null) {
-            return Value::boolean(false);
-        }
-
-        // If either value is a string, we can't perform logical OR on them.
-        if (m_type == Type::String || other.m_type == Type::String) {
-            return Value::boolean(false);
-        }
-
-        // If either value is a boolean, perform logical OR on them.
-        if (m_type == Type::Boolean && other.m_type == Type::Boolean) {
-            return Value::boolean(m_boolean || other.m_boolean);
-        }
-
-        // If one of the values is null, convert the other to a boolean and check if it's true.
-        if (m_type == Type::Null) {
-            return Value::boolean(other.m_integer);
-        }
-        if (other.m_type == Type::Null) {
-            return Value::boolean(m_integer);
-        }
-
-        // If both values are numbers, convert them to booleans and perform logical OR on them.
-        return Value::boolean(m_integer || other.m_integer);
-    }
-
-    Value Value::operator!() const {
-        // If the value is null, return true.
-        if (m_type == Type::Null) {
-            return Value::boolean(true);
-        }
-
-        // If the value is a string, we can't perform logical NOT on it.
-        if (m_type == Type::String) {
-            return Value::boolean(false);
-        }
-
-        // If the value is a boolean, perform logical NOT on it.
-        if (m_type == Type::Boolean) {
-            return Value::boolean(!m_boolean);
-        }
-
-        // If the value is a number, convert it to a boolean and perform logical NOT on it.
-        return Value::boolean(!m_integer);
+        // In other cases, compare the integer values.
+        return boolean(toInteger() >= other.toInteger());
     }
 
     Value Value::operator-() const {
         // If the value is null, return null.
-        if (m_type == Type::Null) {
-            return Value::null();
+        if (isNull()) {
+            return null();
         }
 
-        // If the value is a string, we can't negate it.
-        if (m_type == Type::String) {
-            return Value::floating(-toFloat());
+        // If the value is a string, try to convert it to a float and negate it.
+        if (isString()) {
+            return floating(-toFloat());
         }
 
-        // If the value is a boolean, convert it to an integer and negate it.
-        if (m_type == Type::Boolean) {
-            return Value::integer(-m_integer);
+        // Negate the integer value.
+        if (isInteger() || isBoolean()) {
+            return integer(-toInteger());
         }
 
-        // If the value is a number, negate it.
-        if (m_type == Type::Integer) {
-            return Value::integer(-m_integer);
-        }
-
-        return Value::floating(-m_float);
+        return floating(-getFloat());
     }
 
+    Value Value::operator&&(const Value &other) const {
+        return boolean(toBool() && other.toBool());
+    }
+
+    Value Value::operator||(const Value &other) const {
+        return boolean(toBool() || other.toBool());
+    }
+
+    Value Value::operator!() const {
+        // If the value is null, return true.
+        if (isNull()) {
+            return boolean(true);
+        }
+
+        // If the value is a string, we can't perform logical NOT on it.
+        if (isString()) {
+            return boolean(false);
+        }
+
+        // In other cases, return the logical NOT of the boolean value.
+        return boolean(!toBool());
+    }
 }
