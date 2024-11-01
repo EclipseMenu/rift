@@ -69,11 +69,10 @@ namespace rift {
             Boolean,
         };
 
-    private:
+        Value() : m_value(std::monostate{}) {}
         Value(Type type, std::variant<int64_t, double, bool, std::string, std::monostate> value)
             : m_type(type), m_value(std::move(value)) {}
 
-    public:
         static Value null() {
             return Value(Type::Null, std::monostate{});
         }
