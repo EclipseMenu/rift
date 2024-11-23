@@ -159,6 +159,7 @@ namespace rift {
 
     Result<Node*> Parser::parseFactor() {
         switch (m_currentToken.type) {
+            case TokenType::NOT:
             case TokenType::PLUS:
             case TokenType::MINUS: {
                 auto type = m_currentToken.type;

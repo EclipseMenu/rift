@@ -26,7 +26,7 @@ namespace rift {
      *
      * arithmetic_expression : term (('+' | '-') term)*
      * term                  : factor (('*' | '/' | '%') factor)*
-     * factor                : ('+' | '-') factor
+     * factor                : ('+' | '-' | '!') factor
      *                       : power
      *
      * power                 : call ('^' factor)*
