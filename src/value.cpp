@@ -395,33 +395,33 @@ namespace rift {
         return geode::Ok(Value(std::pow(toInteger(), other.toInteger())));
     }
 
-    Value::Result Value::operator==(const Value& other) const noexcept {
+    Value Value::operator==(const Value& other) const noexcept {
         // if both values are null, return true
         if (isNull() && other.isNull()) {
-            return geode::Ok(Value(true));
+            return true;
         }
 
         // if only one value is null, return false
         if (isNull() || other.isNull()) {
-            return geode::Ok(Value(false));
+            return false;
         }
 
         // if both values are objects, compare them
         if (isObject() && other.isObject()) {
             // fast fail if the objects have different sizes
             if (getObject().size() != other.getObject().size()) {
-                return geode::Ok(Value(false));
+                return false;
             }
 
             // compare each key-value pair in the objects
             for (auto const& [key, value] : getObject()) {
                 auto it = other.getObject().find(key);
                 if (it == other.getObject().end() || it->second != value) {
-                    return geode::Ok(Value(false));
+                    return false;
                 }
             }
 
-            return geode::Ok(Value(true));
+            return true;
         }
 
         // if both values are arrays, compare them
@@ -431,60 +431,60 @@ namespace rift {
 
             // fast fail if the arrays have different sizes
             if (array.size() != otherArray.size()) {
-                return geode::Ok(Value(false));
+                return false;
             }
 
             // compare each element in the arrays
             for (size_t i = 0; i < array.size(); ++i) {
                 if (array[i] != otherArray[i]) {
-                    return geode::Ok(Value(false));
+                    return false;
                 }
             }
 
-            return geode::Ok(Value(true));
+            return true;
         }
 
         // if both values are strings, compare them
         if (isString() && other.isString()) {
-            return geode::Ok(Value(getString() == other.getString()));
+            return getString() == other.getString();
         }
 
         // if either value is a float, convert both to floats and compare
         if (isFloat() || other.isFloat()) {
-            return geode::Ok(Value(toFloat() == other.toFloat()));
+            return toFloat() == other.toFloat();
         }
 
         // otherwise, convert both to integers and compare
-        return geode::Ok(Value(toInteger() == other.toInteger()));
+        return toInteger() == other.toInteger();
     }
 
-    Value::Result Value::operator!=(const Value& other) const noexcept {
+    Value Value::operator!=(const Value& other) const noexcept {
         // if both values are null, return false
         if (isNull() && other.isNull()) {
-            return geode::Ok(Value(false));
+            return false;
         }
 
         // if only one value is null, return true
         if (isNull() || other.isNull()) {
-            return geode::Ok(Value(true));
+            return true;
         }
 
         // if both values are objects, compare them
         if (isObject() && other.isObject()) {
             // fast fail if the objects have different sizes
             if (getObject().size() != other.getObject().size()) {
-                return geode::Ok(Value(true));
+                return true;
             }
 
             // compare each key-value pair in the objects
             for (auto const& [key, value] : getObject()) {
                 auto it = other.getObject().find(key);
                 if (it == other.getObject().end() || it->second != value) {
-                    return geode::Ok(Value(true));
+                    return true;
                 }
             }
 
-            return geode::Ok(Value(false));
+            return false;
         }
 
         // if both values are arrays, compare them
@@ -494,112 +494,112 @@ namespace rift {
 
             // fast fail if the arrays have different sizes
             if (array.size() != otherArray.size()) {
-                return geode::Ok(Value(true));
+                return true;
             }
 
             // compare each element in the arrays
             for (size_t i = 0; i < array.size(); ++i) {
                 if (array[i] != otherArray[i]) {
-                    return geode::Ok(Value(true));
+                    return true;
                 }
             }
 
-            return geode::Ok(Value(false));
+            return false;
         }
 
         // if both values are strings, compare them
         if (isString() && other.isString()) {
-            return geode::Ok(Value(getString() != other.getString()));
+            return getString() != other.getString();
         }
 
         // if either value is a float, convert both to floats and compare
         if (isFloat() || other.isFloat()) {
-            return geode::Ok(Value(toFloat() != other.toFloat()));
+            return toFloat() != other.toFloat();
         }
 
         // otherwise, convert both to integers and compare
-        return geode::Ok(Value(toInteger() != other.toInteger()));
+        return toInteger() != other.toInteger();
     }
 
-    Value::Result Value::operator<(const Value& other) const noexcept {
+    Value Value::operator<(const Value& other) const noexcept {
         if (isFloat() || other.isFloat()) {
-            return geode::Ok(Value(toFloat() < other.toFloat()));
+            return toFloat() < other.toFloat();
         }
-        return geode::Ok(Value(toInteger() < other.toInteger()));
+        return toInteger() < other.toInteger();
     }
 
-    Value::Result Value::operator>(const Value& other) const noexcept {
+    Value Value::operator>(const Value& other) const noexcept {
         if (isFloat() || other.isFloat()) {
-            return geode::Ok(Value(toFloat() > other.toFloat()));
+            return toFloat() > other.toFloat();
         }
-        return geode::Ok(Value(toInteger() > other.toInteger()));
+        return toInteger() > other.toInteger();
     }
 
-    Value::Result Value::operator<=(const Value& other) const noexcept {
+    Value Value::operator<=(const Value& other) const noexcept {
         if (isFloat() || other.isFloat()) {
-            return geode::Ok(Value(toFloat() <= other.toFloat()));
+            return toFloat() <= other.toFloat();
         }
-        return geode::Ok(Value(toInteger() <= other.toInteger()));
+        return toInteger() <= other.toInteger();
     }
 
-    Value::Result Value::operator>=(const Value& other) const noexcept {
+    Value Value::operator>=(const Value& other) const noexcept {
         if (isFloat() || other.isFloat()) {
-            return geode::Ok(Value(toFloat() >= other.toFloat()));
+            return toFloat() >= other.toFloat();
         }
-        return geode::Ok(Value(toInteger() >= other.toInteger()));
+        return toInteger() >= other.toInteger();
     }
 
-    Value::Result Value::operator&&(const Value& other) const noexcept {
-        return geode::Ok(Value(toBoolean() && other.toBoolean()));
+    Value Value::operator&&(const Value& other) const noexcept {
+        return toBoolean() && other.toBoolean();
     }
 
-    Value::Result Value::operator||(const Value& other) const noexcept {
-        return geode::Ok(Value(toBoolean() || other.toBoolean()));
+    Value Value::operator||(const Value& other) const noexcept {
+        return toBoolean() || other.toBoolean();
     }
 
-    Value::Result Value::operator!() const noexcept {
-        return geode::Ok(Value(!toBoolean()));
+    Value Value::operator!() const noexcept {
+        return !toBoolean();
     }
 
-    Value::Result Value::operator-() const noexcept {
+    Value Value::operator-() const noexcept {
         if (isFloat()) {
-            return geode::Ok(Value(-std::get<double>(m_data)));
+            return -std::get<double>(m_data);
         }
-        return geode::Ok(Value(-toInteger()));
+        return -toInteger();
     }
 
-    Value::Result Value::operator[](const Value& key) const noexcept {
+    Value Value::at(const Value& key) const noexcept {
         switch (m_type) {
             case Type::Array: {
                 auto const& array = getArray();
                 auto index = key.toInteger();
                 if (index < 0 || index >= static_cast<int64_t>(array.size())) {
-                    return geode::Ok(Value()); // return null if index is out of bounds
+                    return {}; // return null if index is out of bounds
                 }
-                return geode::Ok(array[static_cast<size_t>(index)]);
+                return array[static_cast<size_t>(index)];
             }
             case Type::Object: {
                 auto const& object = getObject();
                 auto it = object.find(key.toString());
                 if (it == object.end()) {
-                    return geode::Ok(Value()); // return null if key is not found
+                    return {}; // return null if key is not found
                 }
-                return geode::Ok(it->second);
+                return it->second;
             }
             case Type::String: {
                 auto index = key.toInteger();
                 if (index < 0 || index >= static_cast<int64_t>(getString().size())) {
-                    return geode::Ok(Value()); // return null if index is out of bounds
+                    return {}; // return null if index is out of bounds
                 }
-                return geode::Ok(Value(std::string(1, getString()[static_cast<size_t>(index)])));
+                return std::string(1, getString()[static_cast<size_t>(index)]);
             }
             default:
-                return geode::Ok(Value()); // return null for all other types
+                return {}; // return null for all other types
         }
     }
 
-    Value::Result Value::operator->*(const Value& key) const noexcept {
-        return geode::Err("operator->* not implemented");
+    Value Value::operator->*(const Value& key) const noexcept {
+        return {};
     }
 
     Value Value::operator[](size_t index) const noexcept {

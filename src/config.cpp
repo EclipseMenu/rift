@@ -214,14 +214,14 @@ namespace rift {
                 return geode::Err("Expected at least one argument");
             }
 
-            auto min = args[0];
+            auto min = std::move(args[0]);
             for (size_t i = 1; i < args.size(); ++i) {
                 if (args[i] < min) {
-                    min = args[i];
+                    min = std::move(args[i]);
                 }
             }
 
-            return geode::Ok(min);
+            return geode::Ok(std::move(min));
         }
 
         RuntimeFuncResult max(std::span<Value const> args) noexcept {
@@ -229,14 +229,14 @@ namespace rift {
                 return geode::Err("Expected at least one argument");
             }
 
-            auto max = args[0];
+            auto max = std::move(args[0]);
             for (size_t i = 1; i < args.size(); ++i) {
                 if (args[i] > max) {
-                    max = args[i];
+                    max = std::move(args[i]);
                 }
             }
 
-            return geode::Ok(max);
+            return geode::Ok(std::move(max));
         }
 
         RuntimeFuncResult sum(std::span<Value const> args) noexcept {
@@ -244,9 +244,9 @@ namespace rift {
                 return geode::Err("Expected at least one argument");
             }
 
-            auto sum = args[0].toFloat();
-            for (size_t i = 1; i < args.size(); ++i) {
-                sum = sum + args[i].toFloat();
+            double sum = 0;
+            for (size_t i = 0; i < args.size(); ++i) {
+                sum += args[i].toFloat();
             }
 
             return geode::Ok(sum);

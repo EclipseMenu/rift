@@ -33,7 +33,7 @@ void RIFT_EVAL(std::string_view code, rift::Value const& expected, rift::Object 
     if (!directMode) {
         passed = result.unwrap().toString() == expected.toString();
     } else {
-        passed = (result.unwrap() == expected).unwrapOrDefault().toBoolean();
+        passed = result.unwrap() == expected;
     }
 
     if (passed) {
@@ -110,6 +110,7 @@ int main() {
     RIFT_EVAL("--'7'", 7); // unary minus converts string to number
     RIFT_EVAL("('hello world' - 'hello ')[2] == 'r'", true); // string subtraction
     RIFT_TEST("{middlePad('#' * (progress * 4 / 10), 40, '-')} {progress}%", "----------####################---------- 50%", {{"progress", 50}});
+    RIFT_TEST("{min(20, 40)}", "20");
 
     fmt::println("\nResults:\nTests passed: {}/{}\nTests failed: {}/{}", TEST_PASSED, TEST_COUNT, TEST_FAILED, TEST_COUNT);
     return TEST_FAILED;

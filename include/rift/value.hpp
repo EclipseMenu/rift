@@ -189,24 +189,24 @@ namespace rift {
 
         // Comparison operators
 
-        Result operator==(const Value& other) const noexcept;
-        Result operator!=(const Value& other) const noexcept;
-        Result operator<(const Value& other) const noexcept;
-        Result operator>(const Value& other) const noexcept;
-        Result operator<=(const Value& other) const noexcept;
-        Result operator>=(const Value& other) const noexcept;
+        Value operator==(const Value& other) const noexcept;
+        Value operator!=(const Value& other) const noexcept;
+        Value operator<(const Value& other) const noexcept;
+        Value operator>(const Value& other) const noexcept;
+        Value operator<=(const Value& other) const noexcept;
+        Value operator>=(const Value& other) const noexcept;
 
         // Logical operators
 
-        Result operator&&(const Value& other) const noexcept;
-        Result operator||(const Value& other) const noexcept;
-        Result operator!() const noexcept;
+        Value operator&&(const Value& other) const noexcept;
+        Value operator||(const Value& other) const noexcept;
+        Value operator!() const noexcept;
 
         // Special operators
 
-        Result operator-() const noexcept;
-        Result operator[](const Value& key) const noexcept;
-        Result operator->*(const Value& key) const noexcept;
+        Value operator-() const noexcept;
+        Value at(const Value& key) const noexcept;
+        Value operator->*(const Value& key) const noexcept;
 
         // Object/Array access operators
 
@@ -214,6 +214,13 @@ namespace rift {
         Value& operator[](size_t index) noexcept;
         Value operator[](std::string const& key) const noexcept;
         Value& operator[](std::string const& key) noexcept;
+
+        // Cast operators
+
+        operator bool() const noexcept { return toBoolean(); }
+        explicit operator int64_t() const noexcept { return toInteger(); }
+        explicit operator double() const noexcept { return toFloat(); }
+        explicit operator std::string() const noexcept { return toString(); }
 
         constexpr Value& operator=(Value const&) noexcept = default;
 

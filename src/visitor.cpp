@@ -75,6 +75,10 @@ namespace rift {
 
 #define CASE(Type, op) \
     case TokenType::Type: { \
+        return geode::Ok(lhs.unwrap() op rhs.unwrap()); \
+    }
+#define CASE_UNWRAP(Type, op) \
+    case TokenType::Type: { \
         auto res = lhs.unwrap() op rhs.unwrap(); \
         if (res.isErr()) { \
             return node.error(fmt::format("RuntimeError: {}", res.unwrapErr())); \
@@ -82,14 +86,15 @@ namespace rift {
         return geode::Ok(res.unwrap()); \
     }
 
+
         switch (node.op()) {
             // Math operators
-            CASE(PLUS, +)
-            CASE(MINUS, -)
-            CASE(STAR, *)
-            CASE(SLASH, /)
-            CASE(PERCENT, %)
-            CASE(CARET, ^)
+            CASE_UNWRAP(PLUS, +)
+            CASE_UNWRAP(MINUS, -)
+            CASE_UNWRAP(STAR, *)
+            CASE_UNWRAP(SLASH, /)
+            CASE_UNWRAP(PERCENT, %)
+            CASE_UNWRAP(CARET, ^)
 
             // Comparison operators
             CASE(EQUAL_EQUAL, ==)
@@ -117,20 +122,10 @@ namespace rift {
         switch (node.op()) {
             case TokenType::PLUS:
                 return res;
-            case TokenType::MINUS: {
-                auto val = -res.unwrap();
-                if (val.isErr()) {
-                    return node.error(fmt::format("RuntimeError: {}", val.unwrapErr()));
-                }
-                return geode::Ok(val.unwrap());
-            }
-            case TokenType::NOT: {
-                auto val = !res.unwrap();
-                if (val.isErr()) {
-                    return node.error(fmt::format("RuntimeError: {}", val.unwrapErr()));
-                }
-                return geode::Ok(val.unwrap());
-            }
+            case TokenType::MINUS:
+                return geode::Ok(-res.unwrap());
+            case TokenType::NOT:
+                return geode::Ok(!res.unwrap());
             case TokenType::DOLLAR: {
                 auto val = res.unwrap().toString();
                 auto fmtRes = rift::format(val, m_variables);
@@ -215,11 +210,6 @@ namespace rift {
             return key;
         }
 
-        auto res = obj.unwrap()[key.unwrap()];
-        if (res.isErr()) {
-            return node.error(fmt::format("RuntimeError: {}", res.unwrapErr()));
-        }
-
-        return geode::Ok(res.unwrap());
+        return geode::Ok(obj.unwrap().at(key.unwrap()));
     }
 }
