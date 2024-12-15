@@ -259,7 +259,11 @@ namespace rift {
             }
 
             auto const& str = isString() ? getString() : other.getString();
-            auto const& num = isString() ? other.toInteger() : toInteger();
+            auto num = isString() ? other.toInteger() : toInteger();
+
+            if (num <= 0) {
+                return geode::Ok(Value(""));
+            }
 
             std::string result;
             result.reserve(str.size() * num);
